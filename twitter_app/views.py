@@ -1,4 +1,3 @@
-import messages
 from django.contrib import messages
 from django.shortcuts import render, redirect
 
@@ -6,7 +5,7 @@ from twitter_app.forms import MessageForm
 from twitter_app.forms import RegisterForm
 from twitter_app.models import Message
 from twitter_app.models import User
-from twitter_app.utils import hash_pass
+from twitter_app.utils import hash_pass, check_pass
 
 
 def index(request):
@@ -34,10 +33,11 @@ def login_view(request):
 
         try:
             user = User.objects.get(username=username)
-            if password == user.password:
+            # Use check_pass to validate the password
+            if check_pass(password, user.password):
                 response = redirect('home')
-                response.set_cookie('user_id', user.id, max_age=3600)
-                response.set_cookie('username', user.username, max_age=3600)
+                response.set_cookie('user_id', user.id, max_age=10)
+                response.set_cookie('username', user.username, max_age=10)
                 return response
             else:
                 messages.error(request, 'Invalid username or password.')
@@ -79,7 +79,7 @@ def register(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save(commit=False)
-            # Hashowanie hasła przed zapisaniem TODO
+
             new_user.password = hash_pass(form.cleaned_data["password"])
             new_user.save()
             return redirect('login')

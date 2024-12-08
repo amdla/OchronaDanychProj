@@ -27,6 +27,7 @@ class MessageForm(forms.ModelForm):
 
 
 class RegisterForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
     password_confirm = forms.CharField(widget=forms.PasswordInput)
 
     class Meta:
@@ -39,4 +40,5 @@ class RegisterForm(forms.ModelForm):
 
         if password != password_confirm:
             raise forms.ValidationError("Passwords don't match")
+
         return password_confirm
