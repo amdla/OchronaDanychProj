@@ -1,4 +1,6 @@
 # urls.py
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path
 
 from twitter_app import views
@@ -10,3 +12,5 @@ urlpatterns = [
     path('register/', views.register, name='register'),  # Rejestracja
     path('post_message/', views.post_message, name='post_message'),  # Dodawanie wiadomości
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 # BASE_DIR is the directory where manage.py is located
@@ -7,6 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'your-secret-key'  # Pamiętaj, by w produkcji zmienić na coś bezpiecznego
 DEBUG = True  # Ustaw na False w produkcji
 ALLOWED_HOSTS = []  # Dostosuj do swoich domen w produkcji (np. ['yourdomain.com'])
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Applications
 INSTALLED_APPS = [
@@ -86,10 +89,6 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, images)
 STATIC_URL = '/static/'
-
-# Media files (uploads)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 # Authentication settings
 LOGIN_URL = 'login'  # Przekierowanie do logowania, jeśli użytkownik nie jest zalogowany

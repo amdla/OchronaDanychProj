@@ -16,3 +16,13 @@ def check_pass(password, hashed_password):
         return ph.verify(hashed_password, password)
     except VerifyMismatchError:
         return False
+
+
+ALLOWED_TAGS = [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'a',
+    'blockquote', 'code', 'pre', 'img', 'br', 'hr'
+]
+ALLOWED_ATTRIBUTES = {
+    'a': ['href', 'title'],
+    'img': ['src', 'alt', 'title']
+}

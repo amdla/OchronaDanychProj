@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,22 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}My Django App{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg">
     <a class="navbar-brand" href="{% url 'home' %}">Homepage</a>
+
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="btn btn-sm theme-toggle-btn" aria-label="Toggle dark mode">
+        <span class="theme-icon-light" style="display: none;">🌙</span>
+        <span class="theme-icon-dark">☀️</span>
+    </button>
+
     <div class="collapse navbar-collapse">
         <ul class="navbar-nav ml-auto">
             {% if request.COOKIES.user_id %}
-                <!-- Logout button if user is logged in -->
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">Logout</a>
                 </li>
             {% else %}
-                <!-- Login button if user is not logged in -->
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'login' %}">Login</a>
                 </li>
@@ -29,13 +36,79 @@
     </div>
 </nav>
 
-<!-- Main content area -->
 <div class="container mt-5">
-    {% block content %}{% endblock %}
+    {% block content %}
+        <div class="messages">
+            <!-- Example message with image -->
+            <div class="message">
+                <div class="message-inner">
+                    <div class="user-avatar"></div>
+                    <div class="message-body">
+                        <div class="message-header">
+                            <span class="username">123456</span><span class="username-sep"> says:</span>
+                        </div>
+                        <div class="message-text">
+                            This is a sample message text. It can be multiple lines and should look neat. Below this
+                            text, there's an image.
+                        </div>
+                        <img class="posted-image" src="https://via.placeholder.com/500x300" alt="Example Image">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example message without image -->
+            <div class="message">
+                <div class="message-inner">
+                    <div class="user-avatar"></div>
+                    <div class="message-body">
+                        <div class="message-header">
+                            <span class="username">1234568</span><span class="username-sep"> says:</span>
+                        </div>
+                        <div class="message-text">
+                            Another message here with just text, no image. The card should still look good and well
+                            spaced.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock %}
 </div>
 
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-{% block extra_js %}{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            const iconLight = themeToggle.querySelector('.theme-icon-light');
+            const iconDark = themeToggle.querySelector('.theme-icon-dark');
+
+            // Check user’s theme preference
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            if (currentTheme === 'dark') {
+                body.classList.add('dark-mode');
+                iconDark.style.display = 'none';
+                iconLight.style.display = 'inline';
+            }
+
+            themeToggle.addEventListener('click', function () {
+                body.classList.toggle('dark-mode');
+                if (body.classList.contains('dark-mode')) {
+                    iconDark.style.display = 'none';
+                    iconLight.style.display = 'inline';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    iconLight.style.display = 'none';
+                    iconDark.style.display = 'inline';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        });
+    </script>
+{% endblock %}
 </body>
 </html>

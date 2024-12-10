@@ -1,3 +1,5 @@
+import bleach
+import markdown
 from django.contrib import messages
 from django.shortcuts import render, redirect
 
@@ -5,7 +7,7 @@ from twitter_app.forms import MessageForm
 from twitter_app.forms import RegisterForm
 from twitter_app.models import Message
 from twitter_app.models import User
-from twitter_app.utils import hash_pass, check_pass
+from twitter_app.utils import hash_pass, check_pass, ALLOWED_TAGS, ALLOWED_ATTRIBUTES
 
 
 def index(request):
@@ -16,7 +18,10 @@ def index(request):
     print(f"User ID: {user_id}, Username: {username}")
 
     if user_id and username:
-        messages_list = Message.objects.all().order_by('-created_at')  # Pobieramy wiadomości
+        messages_list = Message.objects.all().order_by('-created_at')
+        for message in messages_list:
+            safe_markdown = markdown.markdown(message.content)
+            message.content = bleach.clean(safe_markdown, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         return render(request, 'index.html', {'messages': messages_list, 'username': username})
     else:
         # Jeśli użytkownik nie jest zalogowany, przekierowujemy do logowania
@@ -36,8 +41,8 @@ def login_view(request):
             # Use check_pass to validate the password
             if check_pass(password, user.password):
                 response = redirect('home')
-                response.set_cookie('user_id', user.id, max_age=10)
-                response.set_cookie('username', user.username, max_age=10)
+                response.set_cookie('user_id', user.id, max_age=1200)
+                response.set_cookie('username', user.username, max_age=1200)
                 return response
             else:
                 messages.error(request, 'Invalid username or password.')
@@ -48,7 +53,7 @@ def login_view(request):
 
 
 def post_message(request):
-    clear_messages(request)  # Czyść komunikaty na początku
+    clear_messages(request)
 
     user_id = request.COOKIES.get('user_id')
     username = request.COOKIES.get('username')

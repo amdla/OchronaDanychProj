@@ -12,11 +12,12 @@ class User(models.Model):
 
 
 class Message(models.Model):
-    content = models.TextField()  # Treść wiadomości
-    image_url = models.URLField(null=True, blank=True)  # Opcjonalny URL obrazka
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')  # Odwołanie do użytkownika
-    created_at = models.DateTimeField(default=timezone.now)  # Data utworzenia wiadomości
-    updated_at = models.DateTimeField(auto_now=True)  # Data ostatniej modyfikacji
+    content = models.TextField()
+    image_url = models.URLField(null=True, blank=True)
+    image = models.ImageField(upload_to='uploads/', null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.content[:50]  # Zwróci pierwsze 50 znaków wiadomości

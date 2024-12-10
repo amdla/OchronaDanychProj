@@ -6,7 +6,6 @@
 
     {% if username %}
         <p>Hello, {{ username }}! You are logged in.</p>
-        <a href="{% url 'logout' %}">Logout</a>
     {% else %}
         <p>You are not logged in. <a href="{% url 'login' %}">Login here</a>.</p>
     {% endif %}
@@ -24,15 +23,19 @@
     <div class="messages">
         {% for message in messages %}
             <div class="message">
-                <p><strong>{{ message.user.username }}:</strong> {{ message.content }}</p>
+                <h3>{{ message.user.username }} says:</h3>
+                <div class="content">
+                    {{ message.content|safe }}
+                </div>
                 {% if message.image_url %}
-                    <img src="{{ message.image_url }}" alt="Message image" class="message-image">
+                    <img src="{{ message.image_url }}" alt="Image from URL" class="posted-image">
                 {% endif %}
-                <p><small>{{ message.created_at }}</small></p>
+                {% if message.image %}
+                    <img src="{{ message.image.url }}" alt="Uploaded Image" class="posted-image">
+                {% endif %}
             </div>
-            {% empty %}
-            <p>No messages yet. Be the first to post!</p>
         {% endfor %}
+
     </div>
 
 {% endblock %}
