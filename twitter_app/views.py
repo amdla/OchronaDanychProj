@@ -1,13 +1,16 @@
+from datetime import timedelta, datetime
+
 import bleach
 import markdown
 from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.utils.timezone import now
 
 from twitter_app.forms import MessageForm
 from twitter_app.forms import RegisterForm
 from twitter_app.models import Message
 from twitter_app.models import User
-from twitter_app.utils import hash_pass, check_pass, ALLOWED_TAGS, ALLOWED_ATTRIBUTES
+from twitter_app.utils import check_password, hash_password, ALLOWED_TAGS, ALLOWED_ATTRIBUTES
 
 
 def index(request):
@@ -31,23 +34,54 @@ def index(request):
 
 # Widok logowania
 def login_view(request):
-    clear_messages(request)  # Wyczyść wszystkie istniejące komunikaty
+    clear_messages(request)  # Clear existing messages
+
+    # Get failed attempts and last attempt time from cookies
+    failed_attempts = int(request.COOKIES.get('failed_attempts', 0))
+    last_attempt_time_str = request.COOKIES.get('last_attempt_time')
+
+    # Convert last_attempt_time to a datetime object if it exists
+    if last_attempt_time_str:
+        last_attempt_time = datetime.fromisoformat(last_attempt_time_str)
+    else:
+        last_attempt_time = None
+
+    # Lockout threshold and duration
+    MAX_FAILED_ATTEMPTS = 5
+    LOCKOUT_DURATION = timedelta(seconds=10)
+
+    # Check if the user is locked out
+    if failed_attempts >= MAX_FAILED_ATTEMPTS and last_attempt_time:
+        if now() - last_attempt_time < LOCKOUT_DURATION:
+            messages.error(request, 'Too many failed attempts. Please try again later.')
+            return render(request, 'login.html')
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
 
         try:
             user = User.objects.get(username=username)
-            # Use check_pass to validate the password
-            if check_pass(password, user.password):
+            if check_password(password, user.password):
                 response = redirect('home')
                 response.set_cookie('user_id', user.id, max_age=1200)
                 response.set_cookie('username', user.username, max_age=1200)
+
+                # Reset failed attempts on successful login
+                response.delete_cookie('failed_attempts')
+                response.delete_cookie('last_attempt_time')
                 return response
             else:
                 messages.error(request, 'Invalid username or password.')
         except User.DoesNotExist:
             messages.error(request, 'Invalid username or password.')
+
+        # Increment failed attempts and set the last attempt time
+        failed_attempts += 1
+        response = render(request, 'login.html')
+        response.set_cookie('failed_attempts', failed_attempts, max_age=1200)
+        response.set_cookie('last_attempt_time', now().isoformat(), max_age=1200)
+        return response
 
     return render(request, 'login.html')
 
@@ -85,7 +119,7 @@ def register(request):
         if form.is_valid():
             new_user = form.save(commit=False)
 
-            new_user.password = hash_pass(form.cleaned_data["password"])
+            new_user.password = hash_password(form.cleaned_data["password"])
             new_user.save()
             return redirect('login')
     else:

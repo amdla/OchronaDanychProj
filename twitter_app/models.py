@@ -19,12 +19,5 @@ class Message(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return self.content[:50]  # Zwróci pierwsze 50 znaków wiadomości
-
     class Meta:
         ordering = ['-created_at']  # Domyślne sortowanie wiadomości od najnowszych
-
-    def get_content_preview(self):
-        """Method to display a preview of content with simple formatting (if needed)."""
-        return self.content[:100]  # Zwraca pierwsze 100 znaków wiadomości

@@ -40,7 +40,7 @@ ROOT_URLCONF = 'twitter_app.urls'  # Zmieniamy na nazwę swojego projektu
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Upewnij się, że masz folder templates w projekcie
+        'DIRS': [os.path.join(BASE_DIR, 'twitter_app', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -89,6 +89,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, images)
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'twitter_app', 'static')]
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Authentication settings
 LOGIN_URL = 'login'  # Przekierowanie do logowania, jeśli użytkownik nie jest zalogowany

@@ -5,12 +5,12 @@ from argon2.exceptions import VerifyMismatchError
 ph = PasswordHasher()
 
 
-def hash_pass(password):
+def hash_password(password):
     # Hash the password
     return ph.hash(password)
 
 
-def check_pass(password, hashed_password):
+def check_password(password, hashed_password):
     try:
         # Verify the password against the hash
         return ph.verify(hashed_password, password)
