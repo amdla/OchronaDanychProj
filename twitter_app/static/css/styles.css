@@ -4,8 +4,8 @@ html, body {
     margin: 0;
     padding: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
-    background: #ffffff; /* White background */
-    color: #000000; /* Black text */
+    background: #ffffff;
+    color: #000000;
 }
 
 body {
@@ -41,6 +41,8 @@ body {
 .container {
     flex: 1;
     padding: 2rem 1rem;
+    max-width: 800px; /* Set a max-width for the content */
+    margin: 0 auto; /* Center the content horizontally */
 }
 
 /* Typography */
@@ -120,6 +122,46 @@ form button[type="submit"]:hover {
     background: #0056b3;
 }
 
+.expandable-form {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+#content-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box; /* Ensure padding is included in the width */
+}
+
+.additional-fields {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+/* Form Button */
+.additional-fields button[type="submit"] {
+    background: #007bff;
+    color: #ffffff;
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    border: none;
+    transition: background 0.2s ease-in-out;
+}
+
+.additional-fields button[type="submit"]:hover {
+    background: #0056b3;
+}
+
 /* Message Box */
 .message {
     background: #f8f9fa;
@@ -140,15 +182,15 @@ form button[type="submit"]:hover {
 }
 
 .posted-image {
-    max-width: 100%;          /* Ensure the image does not exceed the container width */
-    max-height: 400px;        /* Set a reasonable max height */
-    width: auto;              /* Maintain the original aspect ratio */
-    height: auto;             /* Maintain the original aspect ratio */
-    object-fit: contain;      /* Ensure the entire image fits within the set dimensions */
-    border-radius: 8px;       /* Maintain rounded corners */
+    max-width: 100%; /* Image won't exceed container width */
+    max-height: 400px; /* Cap the height to 400px */
+    width: auto; /* Maintain aspect ratio */
+    height: auto; /* Maintain aspect ratio */
+    object-fit: contain; /* Fit the image within the box without stretching */
+    border-radius: 8px; /* Rounded corners */
     border: 1px solid #e0e0e0;
-    display: block;           /* Ensure the image behaves like a block element */
-    margin: 0 auto;           /* Center the image horizontally */
+    display: block; /* Ensure the image behaves like a block element */
+    margin: 0 auto; /* Center the image horizontally */
 }
 
 /* ==================== DARK MODE OVERRIDES ==================== */
@@ -208,6 +250,27 @@ body.dark-mode form textarea {
     background: #333333;
     color: #ffffff;
     border: 1px solid #555;
+}
+
+/* Expandable Form in Dark Mode */
+body.dark-mode #content-input {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+}
+
+body.dark-mode .additional-fields {
+    background-color: #222222;
+    border: 1px solid #555;
+}
+
+/* Form Button in Dark Mode */
+body.dark-mode .additional-fields button[type="submit"] {
+    background: #66b2ff;
+}
+
+body.dark-mode .additional-fields button[type="submit"]:hover {
+    background: #3399ff;
 }
 
 /* Message Box in Dark Mode */

@@ -17,19 +17,31 @@ def index(request):
     user_id = request.COOKIES.get('user_id')
     username = request.COOKIES.get('username')
 
-    # Debugowanie - sprawdzenie ciasteczek
-    print(f"User ID: {user_id}, Username: {username}")
-
-    if user_id and username:
-        messages_list = Message.objects.all().order_by('-created_at')
-        for message in messages_list:
-            safe_markdown = markdown.markdown(message.content)
-            message.content = bleach.clean(safe_markdown, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
-        return render(request, 'index.html', {'messages': messages_list, 'username': username})
-    else:
-        # Jeśli użytkownik nie jest zalogowany, przekierowujemy do logowania
+    if not user_id or not username:
         messages.error(request, 'You must be logged in to view this page.')
         return redirect('login')
+
+    # Handle form submission
+    if request.method == 'POST':
+        form = MessageForm(request.POST, request.FILES)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.user_id = user_id
+            message.save()
+            messages.success(request, 'Your message has been posted!')
+            return redirect('home')
+        else:
+            messages.error(request, 'There was an issue with your message.')
+    else:
+        form = MessageForm()
+
+    # Fetch and clean messages
+    messages_list = Message.objects.all().order_by('-created_at')
+    for message in messages_list:
+        safe_markdown = markdown.markdown(message.content)
+        message.content = bleach.clean(safe_markdown, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+
+    return render(request, 'index.html', {'messages': messages_list, 'username': username, 'form': form})
 
 
 # Widok logowania
@@ -84,33 +96,6 @@ def login_view(request):
         return response
 
     return render(request, 'login.html')
-
-
-def post_message(request):
-    clear_messages(request)
-
-    user_id = request.COOKIES.get('user_id')
-    username = request.COOKIES.get('username')
-
-    if not user_id or not username:
-        messages.error(request, 'You must be logged in to post a message.')
-        return redirect('login')
-
-    if request.method == 'POST':
-        form = MessageForm(request.POST, request.FILES)
-        if form.is_valid():
-            message = form.save(commit=False)
-            message.user_id = user_id
-            message.save()
-            messages.success(request, 'Your message has been posted!')
-            return redirect('home')
-        else:
-            messages.error(request, 'There was an issue with your message.')
-
-    else:
-        form = MessageForm()
-
-    return render(request, 'post_message.html', {'form': form})
 
 
 def register(request):
