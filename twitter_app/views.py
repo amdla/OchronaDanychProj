@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 import bleach
 import markdown
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
 from twitter_app.forms import MessageForm
@@ -20,13 +20,15 @@ def index(request):
     if not user_id or not username:
         messages.error(request, 'You must be logged in to view this page.')
         return redirect('login')
+    user = User.objects.get(id=user_id, username=username)
+    request.user = user  # Manually set request.user
 
     # Handle form submission
     if request.method == 'POST':
         form = MessageForm(request.POST, request.FILES)
         if form.is_valid():
             message = form.save(commit=False)
-            message.user_id = user_id
+            message.user = request.user
             message.save()
             messages.success(request, 'Your message has been posted!')
             return redirect('home')
@@ -35,10 +37,10 @@ def index(request):
     else:
         form = MessageForm()
 
-    # Fetch and clean messages
-    messages_list = Message.objects.all().order_by('-created_at')
+    # Fetch only active messages (status = 1)
+    messages_list = Message.objects.filter(status=1).order_by('-created_at')
     for message in messages_list:
-        safe_markdown = markdown.markdown(message.content)
+        safe_markdown = markdown.markdown(message.content, extensions=['extra', 'nl2br'])
         message.content = bleach.clean(safe_markdown, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
     return render(request, 'index.html', {'messages': messages_list, 'username': username, 'form': form})
@@ -139,3 +141,12 @@ def logout_view(request):
 def clear_messages(request):
     storage = messages.get_messages(request)
     storage.used = True  # Czyści wszystkie komunikaty
+
+
+def delete_message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+
+    message.status = 0  # Soft delete by setting status to 0
+    message.save()
+    messages.success(request, 'The message has been deleted.')
+    return redirect('home')

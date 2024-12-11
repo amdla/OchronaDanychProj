@@ -20,9 +20,12 @@ def check_password(password, hashed_password):
 
 ALLOWED_TAGS = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'a',
-    'blockquote', 'code', 'pre', 'img', 'br', 'hr'
+    'blockquote', 'code', 'pre', 'img', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'del'
 ]
+
 ALLOWED_ATTRIBUTES = {
     'a': ['href', 'title'],
-    'img': ['src', 'alt', 'title']
+    'img': ['src', 'alt', 'title'],
+    'th': ['colspan', 'rowspan'],
+    'td': ['colspan', 'rowspan']
 }

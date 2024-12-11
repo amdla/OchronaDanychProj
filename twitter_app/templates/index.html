@@ -6,18 +6,16 @@
     {% if username %}
         <p>Hello, {{ username }}! You are logged in.</p>
 
-        <!-- Expandable Form to Post a New Message -->
-        <h2>Post a new message</h2>
+        <!-- Form to Post a New Message -->
+        <h2>Post a New Message</h2>
         <div class="expandable-form">
             <form method="POST" enctype="multipart/form-data" id="message-form">
                 {% csrf_token %}
-                <!-- Initially Visible Input Field -->
                 <label for="content-input">Your Message:</label>
-                <input type="text" name="content" id="content-input" placeholder="What's on your mind?" required>
+                <textarea name="content" id="content-input" placeholder="What's on your mind?" required></textarea>
 
-
-                <!-- Hidden Fields (Image Upload and Submit Button) -->
-                <div class="additional-fields" id="additional-fields">
+                <!-- Image Upload and Submit Button -->
+                <div class="additional-fields" id="additional-fields" style="display: none;">
                     {{ form.image.label_tag }}
                     {{ form.image }}
                     <button type="submit">Post Message</button>
@@ -31,18 +29,30 @@
     <!-- Display Messages -->
     <div class="messages mt-4">
         {% for message in messages %}
-            <div class="message">
-                <h3>{{ message.user.username }} says:</h3>
-                <div class="content">
-                    {{ message.content|safe }}
+            {% if message.status == 1 %}
+                <div class="message">
+                    <h3>{{ message.user.username }} says:</h3>
+                    <div class="content">
+                        {{ message.content|safe }}
+                    </div>
+                    {% if message.image_url %}
+                        <img src="{{ message.image_url }}" alt="Image from URL" class="posted-image">
+                    {% endif %}
+                    {% if message.image %}
+                        <img src="{{ message.image.url }}" alt="Uploaded Image" class="posted-image">
+                    {% endif %}
+
+                    <!-- Delete Button Displayed Only for Message Owner -->
+                    {% if message.user.id == request.user.id %}
+                        <form action="{% url 'delete_message' message.id %}" method="POST" class="delete-form">
+                            {% csrf_token %}
+                            <button type="submit" class="delete-button" title="Delete Message">
+                                🗑️
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
-                {% if message.image_url %}
-                    <img src="{{ message.image_url }}" alt="Image from URL" class="posted-image">
-                {% endif %}
-                {% if message.image %}
-                    <img src="{{ message.image.url }}" alt="Uploaded Image" class="posted-image">
-                {% endif %}
-            </div>
+            {% endif %}
         {% endfor %}
     </div>
 {% endblock %}
@@ -53,43 +63,63 @@
             const contentInput = document.getElementById('content-input');
             const additionalFields = document.getElementById('additional-fields');
 
-            // Show additional fields when the input is focused
+            // Show additional fields when the textarea is focused
             contentInput.addEventListener('focus', function () {
                 additionalFields.style.display = 'block';
             });
 
-            // Optionally, hide additional fields if the input is blurred and empty
+            // Hide additional fields if the textarea is blurred and empty
             document.addEventListener('click', function (event) {
                 if (!document.getElementById('message-form').contains(event.target) && !contentInput.value.trim()) {
                     additionalFields.style.display = 'none';
                 }
             });
 
+            // Shift + Enter for newlines in textarea
+            contentInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' && event.shiftKey) {
+                    event.preventDefault();
+                    const cursorPosition = contentInput.selectionStart;
+                    const textBefore = contentInput.value.substring(0, cursorPosition);
+                    const textAfter = contentInput.value.substring(cursorPosition);
+                    contentInput.value = textBefore + '\n' + textAfter;
+                    contentInput.selectionStart = contentInput.selectionEnd = cursorPosition + 1;
+                }
+            });
+
             // Theme toggle script
             const body = document.body;
             const themeToggle = document.getElementById('theme-toggle');
-            const iconLight = themeToggle.querySelector('.theme-icon-light');
-            const iconDark = themeToggle.querySelector('.theme-icon-dark');
+            const iconLight = themeToggle?.querySelector('.theme-icon-light');
+            const iconDark = themeToggle?.querySelector('.theme-icon-dark');
 
             const currentTheme = localStorage.getItem('theme') || 'light';
             if (currentTheme === 'dark') {
                 body.classList.add('dark-mode');
-                iconDark.style.display = 'none';
-                iconLight.style.display = 'inline';
-            }
-
-            themeToggle.addEventListener('click', function () {
-                body.classList.toggle('dark-mode');
-                if (body.classList.contains('dark-mode')) {
+                if (iconDark && iconLight) {
                     iconDark.style.display = 'none';
                     iconLight.style.display = 'inline';
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    iconLight.style.display = 'none';
-                    iconDark.style.display = 'inline';
-                    localStorage.setItem('theme', 'light');
                 }
-            });
+            }
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function () {
+                    body.classList.toggle('dark-mode');
+                    if (body.classList.contains('dark-mode')) {
+                        if (iconDark && iconLight) {
+                            iconDark.style.display = 'none';
+                            iconLight.style.display = 'inline';
+                        }
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        if (iconDark && iconLight) {
+                            iconLight.style.display = 'none';
+                            iconDark.style.display = 'inline';
+                        }
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
         });
     </script>
 {% endblock %}

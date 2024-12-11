@@ -1,3 +1,15 @@
-fix markdown
 add avatars
-add profiles
+add profiles - on user's profile show all HIS messages
+check password strength
+
+confirming personality using ssl certificate - somehow we're supposed to be able to verify it ;3
+logging in with 2FA - TOTP
+reset password using 2FA
+docker (kys)
+safe connection using web server as a proxy NGINX using HTTPS
+
+prevention against CSRF (CSRF/XSRF tokens)
+Content-Security-Policy mechanism against XSS
+log devices that are connected to the account?
+switch off the server header
+
