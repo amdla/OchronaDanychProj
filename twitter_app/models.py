@@ -6,6 +6,8 @@ class User(models.Model):
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
+    avatar = models.ImageField(upload_to='avatars/', default='avatars/standard_avatar.jpg')
+    created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.username

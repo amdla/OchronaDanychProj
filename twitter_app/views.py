@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import datetime
 
 import bleach
 import markdown
@@ -10,7 +10,8 @@ from twitter_app.forms import MessageForm
 from twitter_app.forms import RegisterForm
 from twitter_app.models import Message
 from twitter_app.models import User
-from twitter_app.utils import check_password, hash_password, ALLOWED_TAGS, ALLOWED_ATTRIBUTES
+from twitter_app.utils import check_password, hash_password, ALLOWED_TAGS, ALLOWED_ATTRIBUTES, MAX_FAILED_ATTEMPTS, \
+    LOCKOUT_DURATION, COOKIE_MAX_AGE_THRESHOLD
 
 
 def index(request):
@@ -60,10 +61,6 @@ def login_view(request):
     else:
         last_attempt_time = None
 
-    # Lockout threshold and duration
-    MAX_FAILED_ATTEMPTS = 5
-    LOCKOUT_DURATION = timedelta(seconds=10)
-
     # Check if the user is locked out
     if failed_attempts >= MAX_FAILED_ATTEMPTS and last_attempt_time:
         if now() - last_attempt_time < LOCKOUT_DURATION:
@@ -78,8 +75,8 @@ def login_view(request):
             user = User.objects.get(username=username)
             if check_password(password, user.password):
                 response = redirect('home')
-                response.set_cookie('user_id', user.id, max_age=1200)
-                response.set_cookie('username', user.username, max_age=1200)
+                response.set_cookie('user_id', user.id, COOKIE_MAX_AGE_THRESHOLD)
+                response.set_cookie('username', user.username, COOKIE_MAX_AGE_THRESHOLD)
 
                 # Reset failed attempts on successful login
                 response.delete_cookie('failed_attempts')
@@ -93,8 +90,8 @@ def login_view(request):
         # Increment failed attempts and set the last attempt time
         failed_attempts += 1
         response = render(request, 'login.html')
-        response.set_cookie('failed_attempts', failed_attempts, max_age=1200)
-        response.set_cookie('last_attempt_time', now().isoformat(), max_age=1200)
+        response.set_cookie('failed_attempts', failed_attempts, COOKIE_MAX_AGE_THRESHOLD)
+        response.set_cookie('last_attempt_time', now().isoformat(), COOKIE_MAX_AGE_THRESHOLD)
         return response
 
     return render(request, 'login.html')

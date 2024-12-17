@@ -19,9 +19,9 @@ body {
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
     padding: 0.5rem 1rem;
-    position: sticky;     /* Makes the navbar sticky */
-    top: 0;               /* Stick to the top of the viewport */
-    z-index: 1000;        /* Ensure the navbar stays above other elements */
+    position: sticky; /* Makes the navbar sticky */
+    top: 0; /* Stick to the top of the viewport */
+    z-index: 1000; /* Ensure the navbar stays above other elements */
 }
 
 .navbar .navbar-brand {
@@ -175,24 +175,23 @@ form button[type="submit"]:hover {
 /* Delete Button Styling - Gray Circle with Bin Icon */
 /* Delete Button Styling - Blue Circle with Bin Icon */
 .delete-button {
-    background-color: #1da1f2;   /* Blue background */
-    border: none;                /* No border */
-    color: #fff;                 /* White icon color */
-    font-size: 16px;             /* Icon size */
-    width: 32px;                 /* Width of the circle */
-    height: 32px;                /* Height of the circle */
-    display: flex;               /* Center the icon */
-    align-items: center;         /* Vertical centering */
-    justify-content: center;     /* Horizontal centering */
-    border-radius: 50%;          /* Circle shape */
-    cursor: pointer;             /* Pointer cursor */
+    background-color: #1da1f2; /* Blue background */
+    border: none; /* No border */
+    color: #fff; /* White icon color */
+    font-size: 16px; /* Icon size */
+    width: 32px; /* Width of the circle */
+    height: 32px; /* Height of the circle */
+    display: flex; /* Center the icon */
+    align-items: center; /* Vertical centering */
+    justify-content: center; /* Horizontal centering */
+    border-radius: 50%; /* Circle shape */
+    cursor: pointer; /* Pointer cursor */
     transition: background-color 0.2s ease;
 }
 
 .delete-button:hover {
-    background-color: #1991db;   /* Slightly darker blue on hover */
+    background-color: #1991db; /* Slightly darker blue on hover */
 }
-
 
 
 /* Message Box */
@@ -227,6 +226,17 @@ form button[type="submit"]:hover {
     margin: 0 auto; /* Center the image horizontally */
 }
 
+
+.user-avatar {
+    width: 50px; /* Set the width of the avatar */
+    height: 50px; /* Set the height of the avatar */
+    border-radius: 50%; /* Makes the avatar circular */
+    object-fit: cover; /* Ensures the image covers the space without distortion */
+    border: 2px solid #007bff; /* Optional: add a border to the avatar */
+    margin-right: 10px; /* Adds spacing between the avatar and the username */
+}
+
+
 /* ==================== DARK MODE OVERRIDES ==================== */
 
 body.dark-mode {
@@ -236,9 +246,9 @@ body.dark-mode {
 
 /* Navbar in Dark Mode */
 body.dark-mode .navbar {
-    position: sticky;     /* Makes the navbar sticky */
-    top: 0;               /* Stick to the top of the viewport */
-    z-index: 1000;        /* Ensure the navbar stays above other elements */
+    position: sticky; /* Makes the navbar sticky */
+    top: 0; /* Stick to the top of the viewport */
+    z-index: 1000; /* Ensure the navbar stays above other elements */
     background-color: #000000;
     border-bottom: 1px solid #444;
 }

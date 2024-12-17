@@ -31,6 +31,7 @@
         {% for message in messages %}
             {% if message.status == 1 %}
                 <div class="message">
+                    <img src="{{ user.avatar.url }}" class="user-avatar">
                     <h3>{{ message.user.username }} says:</h3>
                     <div class="content">
                         {{ message.content|safe }}

@@ -1,6 +1,7 @@
 from django import forms
 
 from twitter_app.models import Message, User
+from twitter_app.utils import IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES, MIN_POST_LENGTH_THRESHOLD
 
 
 class MessageForm(forms.ModelForm):
@@ -16,7 +17,7 @@ class MessageForm(forms.ModelForm):
 
     def clean_content(self):
         content = self.cleaned_data.get('content')
-        if len(content) < 5:
+        if len(content) < MIN_POST_LENGTH_THRESHOLD:
             raise forms.ValidationError("Message is too short!")
         return content
 
@@ -26,9 +27,10 @@ class MessageForm(forms.ModelForm):
             # Check file extension
             if not image.name.endswith(('.jpg', '.jpeg', '.png', '.gif')):
                 raise forms.ValidationError("Only image files (JPG, JPEG, PNG, GIF) are allowed.")
-            # Check file size (max 5MB)
-            if image.size > 5 * 1024 * 1024:
-                raise forms.ValidationError("Image size should not exceed 5MB.")
+
+            if image.size > IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES:
+                raise forms.ValidationError(
+                    f"Image size should not exceed {IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES / 1024 / 1024} MB.")
         return image
 
 
