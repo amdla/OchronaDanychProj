@@ -17,12 +17,40 @@
 
     <form method="POST">
         {% csrf_token %}
-        <label for="username">Username:</label>
-        <input type="text" name="username" id="username" required><br><br>
 
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required><br><br>
+        <!-- Render form fields dynamically -->
+        <div>
+            {{ form.non_field_errors }}
+        </div>
 
+        <div>
+            <label for="{{ form.username.id_for_label }}">Username:</label>
+            {{ form.username }}
+            <div class="text-danger">
+                {{ form.username.errors }}
+            </div>
+        </div>
+
+        <div>
+            <label for="{{ form.password.id_for_label }}">Password:</label>
+            {{ form.password }}
+            <div class="text-danger">
+                {{ form.password.errors }}
+            </div>
+        </div>
+
+        <!-- Render CAPTCHA field if required -->
+        {% if form.captcha %}
+            <div>
+                <label for="{{ form.captcha.id_for_label }}">CAPTCHA:</label>
+                {{ form.captcha }}
+                <div class="text-danger">
+                    {{ form.captcha.errors }}
+                </div>
+            </div>
+        {% endif %}
+
+        <br>
         <button type="submit">Login</button>
     </form>
 
