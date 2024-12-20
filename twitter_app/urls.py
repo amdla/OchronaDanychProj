@@ -1,7 +1,7 @@
 # urls.py
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import path
+from django.urls import path, include
 
 from twitter_app import views
 
@@ -10,6 +10,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),  # Strona logowania
     path('logout/', views.logout_view, name='logout'),  # Wylogowanie
     path('register/', views.register, name='register'),  # Rejestracja
+    path('captcha/', include('captcha.urls')),  # Add this line
     path('delete/<int:message_id>/', views.delete_message, name='delete_message'),
 ]
 

@@ -1,3 +1,4 @@
+from captcha.fields import CaptchaField
 from django import forms
 
 from twitter_app.models import Message, User
@@ -50,3 +51,9 @@ class RegisterForm(forms.ModelForm):
             raise forms.ValidationError("Passwords don't match")
 
         return password_confirm
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=150, label='Username')
+    password = forms.CharField(widget=forms.PasswordInput, label='Password')
+    captcha = CaptchaField(required=False)  # CAPTCHA field, initially optional

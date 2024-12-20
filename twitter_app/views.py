@@ -1,17 +1,15 @@
-from datetime import datetime
-
 import bleach
 import markdown
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
-from twitter_app.forms import MessageForm
+from twitter_app.forms import MessageForm, LoginForm
 from twitter_app.forms import RegisterForm
-from twitter_app.models import Message
+from twitter_app.models import Message, LoginAttempt
 from twitter_app.models import User
 from twitter_app.utils import check_password, hash_password, ALLOWED_TAGS, ALLOWED_ATTRIBUTES, MAX_FAILED_ATTEMPTS, \
-    LOCKOUT_DURATION, COOKIE_MAX_AGE_THRESHOLD
+    LOCKOUT_DURATION
 
 
 def index(request):
@@ -47,54 +45,30 @@ def index(request):
     return render(request, 'index.html', {'messages': messages_list, 'username': username, 'form': form})
 
 
-# Widok logowania
+# Configuration constants
+
+
 def login_view(request):
-    clear_messages(request)  # Clear existing messages
-
-    # Get failed attempts and last attempt time from cookies
-    failed_attempts = int(request.COOKIES.get('failed_attempts', 0))
-    last_attempt_time_str = request.COOKIES.get('last_attempt_time')
-
-    # Convert last_attempt_time to a datetime object if it exists
-    if last_attempt_time_str:
-        last_attempt_time = datetime.fromisoformat(last_attempt_time_str)
-    else:
-        last_attempt_time = None
-
-    # Check if the user is locked out
-    if failed_attempts >= MAX_FAILED_ATTEMPTS and last_attempt_time:
-        if now() - last_attempt_time < LOCKOUT_DURATION:
-            messages.error(request, 'Too many failed attempts. Please try again later.')
-            return render(request, 'login.html')
+    form = LoginForm(request.POST or None)
 
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
 
-        try:
-            user = User.objects.get(username=username)
-            if check_password(password, user.password):
-                response = redirect('home')
-                response.set_cookie('user_id', user.id, COOKIE_MAX_AGE_THRESHOLD)
-                response.set_cookie('username', user.username, COOKIE_MAX_AGE_THRESHOLD)
-
-                # Reset failed attempts on successful login
-                response.delete_cookie('failed_attempts')
-                response.delete_cookie('last_attempt_time')
-                return response
-            else:
+            try:
+                user = User.objects.get(username=username)
+                if check_password(password, user.password):
+                    messages.success(request, 'git login')
+                    return redirect('home')
+                else:
+                    messages.error(request, 'Invalid username or password.')
+            except User.DoesNotExist:
                 messages.error(request, 'Invalid username or password.')
-        except User.DoesNotExist:
-            messages.error(request, 'Invalid username or password.')
+        else:
+            messages.error(request, 'captcha error')
 
-        # Increment failed attempts and set the last attempt time
-        failed_attempts += 1
-        response = render(request, 'login.html')
-        response.set_cookie('failed_attempts', failed_attempts, COOKIE_MAX_AGE_THRESHOLD)
-        response.set_cookie('last_attempt_time', now().isoformat(), COOKIE_MAX_AGE_THRESHOLD)
-        return response
-
-    return render(request, 'login.html')
+    return render(request, 'login.html', {'form': form})
 
 
 def register(request):

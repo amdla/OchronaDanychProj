@@ -1,0 +1,5 @@
+django
+bleach
+markdown
+django-simple-captcha
+argon2-cffi

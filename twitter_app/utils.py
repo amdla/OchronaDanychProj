@@ -3,11 +3,11 @@ from datetime import timedelta
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
-MAX_FAILED_ATTEMPTS = 5
-LOCKOUT_DURATION = timedelta(seconds=10)
 COOKIE_MAX_AGE_THRESHOLD = 1200
 IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES = 5 * 1024 * 1024
 MIN_POST_LENGTH_THRESHOLD = 6
+MAX_FAILED_ATTEMPTS = 3
+LOCKOUT_DURATION = timedelta(minutes=15)
 
 # Initialize the Argon2 password hasher
 ph = PasswordHasher()
@@ -37,4 +37,3 @@ ALLOWED_ATTRIBUTES = {
     'th': ['colspan', 'rowspan'],
     'td': ['colspan', 'rowspan']
 }
-
