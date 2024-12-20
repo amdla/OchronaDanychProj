@@ -2,14 +2,12 @@ import bleach
 import markdown
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.utils.timezone import now
 
 from twitter_app.forms import MessageForm, LoginForm
 from twitter_app.forms import RegisterForm
-from twitter_app.models import Message, LoginAttempt
+from twitter_app.models import Message
 from twitter_app.models import User
-from twitter_app.utils import check_password, hash_password, ALLOWED_TAGS, ALLOWED_ATTRIBUTES, MAX_FAILED_ATTEMPTS, \
-    LOCKOUT_DURATION
+from twitter_app.utils import check_password, hash_password, ALLOWED_TAGS, ALLOWED_ATTRIBUTES, COOKIE_MAX_AGE
 
 
 def index(request):
@@ -59,14 +57,20 @@ def login_view(request):
             try:
                 user = User.objects.get(username=username)
                 if check_password(password, user.password):
-                    messages.success(request, 'git login')
-                    return redirect('home')
+                    # Set cookies for user_id and username
+                    response = redirect('home')
+                    response.set_cookie('user_id', user.id, max_age=COOKIE_MAX_AGE)
+                    response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
+                    return response
                 else:
                     messages.error(request, 'Invalid username or password.')
             except User.DoesNotExist:
                 messages.error(request, 'Invalid username or password.')
-        else:
-            messages.error(request, 'captcha error')
+        if 'captcha' in form.errors:
+            # Remove the built-in CAPTCHA error
+            form.errors.pop('captcha')
+            # Add your custom error message
+            messages.error(request, 'Invalid CAPTCHA. Please try again.')
 
     return render(request, 'login.html', {'form': form})
 
@@ -121,3 +125,9 @@ def delete_message(request, message_id):
     message.save()
     messages.success(request, 'The message has been deleted.')
     return redirect('home')
+
+
+def user_profile(request, username):
+    user = get_object_or_404(User, username=username)
+    user_messages = Message.objects.filter(user=user, status=1).order_by('-created_at')
+    return render(request, 'user_profile.html', {'profile_user': user, 'messages': user_messages})

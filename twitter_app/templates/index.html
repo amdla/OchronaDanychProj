@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Welcome to the Message Board!</h1>
 
     {% if username %}
-        <p>Hello, {{ username }}! You are logged in.</p>
-
+        <h1 align="center">Welcome to the Message Board, {{ username }}!</h1>
+        <br>
+        <br>
         <!-- Form to Post a New Message -->
         <h2>Post a New Message</h2>
         <div class="expandable-form">
@@ -31,7 +31,9 @@
         {% for message in messages %}
             {% if message.status == 1 %}
                 <div class="message">
-                    <img src="{{ user.avatar.url }}" class="user-avatar">
+                    <a href="{% url 'user_profile' message.user.username %}">
+                        <img src="{{ message.user.avatar.url }}" class="user-avatar">
+                    </a>
                     <h3>{{ message.user.username }} says:</h3>
                     <div class="content">
                         {{ message.content|safe }}

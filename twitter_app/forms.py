@@ -2,7 +2,7 @@ from captcha.fields import CaptchaField
 from django import forms
 
 from twitter_app.models import Message, User
-from twitter_app.utils import IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES, MIN_POST_LENGTH_THRESHOLD
+from twitter_app.utils import IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES, MIN_POST_LENGTH
 
 
 class MessageForm(forms.ModelForm):
@@ -18,7 +18,7 @@ class MessageForm(forms.ModelForm):
 
     def clean_content(self):
         content = self.cleaned_data.get('content')
-        if len(content) < MIN_POST_LENGTH_THRESHOLD:
+        if len(content) < MIN_POST_LENGTH:
             raise forms.ValidationError("Message is too short!")
         return content
 

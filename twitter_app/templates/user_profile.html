@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{{ profile_user.username }}'s Profile</h1>
+
+    <div class="profile-header">
+        <img src="{{ profile_user.avatar.url }}" class="user-avatar-large" alt="Profile Picture">
+
+    </div>
+
+    <br>
+    <h3>Posts by {{ profile_user.username }}:</h3>
+
+    <div class="messages mt-4">
+        {% for message in messages %}
+            <div class="message">
+                <div class="message-inner">
+                    <h4>{{ message.user.username }} says:</h4>
+                    <div class="content">
+                        {{ message.content|safe }}
+                    </div>
+                    {% if message.image_url %}
+                        <img src="{{ message.image_url }}" alt="Image from URL" class="posted-image">
+                    {% endif %}
+                    {% if message.image %}
+                        <img src="{{ message.image.url }}" alt="Uploaded Image" class="posted-image">
+                    {% endif %}
+
+                    {% if message.user.id == request.user.id %}
+                        <form action="{% url 'delete_message' message.id %}" method="POST" class="delete-form">
+                            {% csrf_token %}
+                            <button type="submit" class="delete-button" title="Delete Message">
+                                🗑️
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <p>No posts yet.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

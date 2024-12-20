@@ -36,13 +36,21 @@
     </div>
 </nav>
 
+<div class="avatar-container">
+    {% if username %}
+        <a href="{% url 'user_profile' username %}">
+            <img src="{{ user.avatar.url }}" class="user-avatar" alt="Profile">
+        </a>
+    {% endif %}
+</div>
+
 <div class="container mt-5">
     {% block content %}
         <div class="messages">
             <!-- Example message with image -->
             <div class="message">
                 <div class="message-inner">
-                    <div class="user-avatar"></div>
+                    <div class="user-avatar-large"></div>
                     <div class="message-body">
                         <div class="message-header">
                             <span class="username">123456</span><span class="username-sep"> says:</span>
