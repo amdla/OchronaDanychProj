@@ -78,6 +78,7 @@ def login_view(request):
 def register(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
+        print(form.fields)
         if form.is_valid():
             new_user = form.save(commit=False)
 

@@ -38,6 +38,7 @@ class MessageForm(forms.ModelForm):
 class RegisterForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     password_confirm = forms.CharField(widget=forms.PasswordInput)
+    email = forms.EmailField(widget=forms.EmailInput)
 
     class Meta:
         model = User
