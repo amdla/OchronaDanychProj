@@ -63,3 +63,19 @@ class LoginForm(forms.Form):
     username = forms.CharField(max_length=150, label='Username')
     password = forms.CharField(widget=forms.PasswordInput, label='Password')
     captcha = CaptchaField(required=False)  # CAPTCHA field, initially optional
+
+
+class AvatarForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['avatar']
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get('avatar')
+        if avatar:
+            if not avatar.name.endswith(('.jpg', '.jpeg', '.png', '.gif')):
+                raise forms.ValidationError("Only image files (JPG, JPEG, PNG, GIF) are allowed.")
+            if avatar.size > IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES:
+                raise forms.ValidationError(
+                    f"Image size should not exceed {IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES / 1024 / 1024} MB.")
+        return avatar

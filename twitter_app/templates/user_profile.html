@@ -2,18 +2,31 @@
 
 {% block content %}
     <h1>{{ profile_user.username }}'s Profile</h1>
-
     <div class="profile-header">
         <img src="{{ profile_user.avatar.url }}" class="user-avatar-large" alt="Profile Picture">
-
+        {% if request.user == profile_user %}
+            <!-- Button to show form -->
+            <button onclick="document.getElementById('avatar-form').style.display='block'" class="btn btn-primary">
+                Change Avatar
+            </button>
+            <!-- Hidden form to update avatar -->
+            <div id="avatar-form" style="display:none;">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">Update Avatar</button>
+                </form>
+            </div>
+        {% endif %}
     </div>
-
     <br>
     <h3>Posts by {{ profile_user.username }}:</h3>
-
     <div class="messages mt-4">
         {% for message in messages %}
             <div class="message">
+                <a href="{% url 'user_profile' message.user.username %}">
+                    <img src="{{ message.user.avatar.url }}" class="user-avatar">
+                </a>
                 <div class="message-inner">
                     <h4>{{ message.user.username }} says:</h4>
                     <div class="content">
@@ -25,8 +38,7 @@
                     {% if message.image %}
                         <img src="{{ message.image.url }}" alt="Uploaded Image" class="posted-image">
                     {% endif %}
-
-                    {% if message.user.id == request.user.id %}
+                    {% if request.user.id == message.user.id %}
                         <form action="{% url 'delete_message' message.id %}" method="POST" class="delete-form">
                             {% csrf_token %}
                             <button type="submit" class="delete-button" title="Delete Message">

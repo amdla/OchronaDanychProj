@@ -3,7 +3,7 @@ import markdown
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 
-from twitter_app.forms import MessageForm, LoginForm
+from twitter_app.forms import MessageForm, LoginForm, AvatarForm
 from twitter_app.forms import RegisterForm
 from twitter_app.models import Message
 from twitter_app.models import User
@@ -101,6 +101,7 @@ def home_view(request):
         return render(request, 'index.html', {'messages': messages_list, 'username': username})
     else:
         # Jeśli nie ma ciasteczek, przekierowujemy do logowania
+
         return redirect('login')
 
 
@@ -127,6 +128,27 @@ def delete_message(request, message_id):
 
 
 def user_profile(request, username):
+    user_id = request.COOKIES.get('user_id')
+    if not user_id:
+        return redirect('login')
+
     user = get_object_or_404(User, username=username)
+    if str(user.id) != user_id:
+        request.user = None  # Indicates no valid logged-in user
+    else:
+        request.user = user
+
     user_messages = Message.objects.filter(user=user, status=1).order_by('-created_at')
-    return render(request, 'user_profile.html', {'profile_user': user, 'messages': user_messages})
+    form = AvatarForm()
+
+    if request.method == 'POST' and request.user == user:
+        form = AvatarForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('user_profile', username=username)
+
+    return render(request, 'user_profile.html', {
+        'profile_user': user,
+        'messages': user_messages,
+        'form': form
+    })
