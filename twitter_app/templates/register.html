@@ -8,4 +8,34 @@
         <button type="submit">Register</button>
     </form>
     <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordInput = document.getElementById("id_password");
+            const feedbackArea = document.createElement("div");
+            passwordInput.parentNode.insertBefore(feedbackArea, passwordInput.nextSibling);
+
+            passwordInput.addEventListener("input", function () {
+                const password = passwordInput.value;
+                const hasUppercase = /[A-Z]/.test(password);
+                const hasLowercase = /[a-z]/.test(password);
+                const hasNumber = /\d/.test(password);
+                const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+                const isValidLength = password.length >= 8;
+
+                feedbackArea.innerHTML = `
+                <ul style="padding: 0;">
+                    <li style="color: ${isValidLength ? 'transparent' : 'red'}; list-style-type: none;">At least 8 characters</li>
+                    <li style="color: ${hasUppercase ? 'transparent' : 'red'}; list-style-type: none;">At least one uppercase letter</li>
+                    <li style="color: ${hasLowercase ? 'transparent' : 'red'}; list-style-type: none;">At least one lowercase letter</li>
+                    <li style="color: ${hasNumber ? 'transparent' : 'red'}; list-style-type: none;">At least one number</li>
+                    <li style="color: ${hasSpecialChar ? 'transparent' : 'red'}; list-style-type: none;">At least one special character</li>
+                </ul>
+            `;
+            });
+        });
+    </script>
+
+
 {% endblock %}

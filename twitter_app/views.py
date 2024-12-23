@@ -15,7 +15,6 @@ def index(request):
     username = request.COOKIES.get('username')
 
     if not user_id or not username:
-        messages.error(request, 'You must be logged in to view this page.')
         return redirect('login')
     user = User.objects.get(id=user_id, username=username)
     request.user = user  # Manually set request.user
@@ -102,7 +101,6 @@ def home_view(request):
         return render(request, 'index.html', {'messages': messages_list, 'username': username})
     else:
         # Jeśli nie ma ciasteczek, przekierowujemy do logowania
-        messages.error(request, 'You must be logged in to view this page.')
         return redirect('login')
 
 

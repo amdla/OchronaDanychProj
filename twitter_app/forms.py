@@ -1,5 +1,7 @@
 from captcha.fields import CaptchaField
 from django import forms
+from django.core.validators import RegexValidator
+from django.forms import ValidationError
 
 from twitter_app.models import Message, User
 from twitter_app.utils import IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES, MIN_POST_LENGTH
@@ -36,9 +38,14 @@ class MessageForm(forms.ModelForm):
 
 
 class RegisterForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
+    password_validator = RegexValidator(
+        regex='^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,}$',
+        message='Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, '
+                'a number, and a special character.'
+    )
+
+    password = forms.CharField(widget=forms.PasswordInput, validators=[password_validator])
     password_confirm = forms.CharField(widget=forms.PasswordInput)
-    email = forms.EmailField(widget=forms.EmailInput)
 
     class Meta:
         model = User
@@ -47,10 +54,8 @@ class RegisterForm(forms.ModelForm):
     def clean_password_confirm(self):
         password = self.cleaned_data.get("password")
         password_confirm = self.cleaned_data.get("password_confirm")
-
-        if password != password_confirm:
-            raise forms.ValidationError("Passwords don't match")
-
+        if password and password_confirm and password != password_confirm:
+            raise ValidationError("Passwords don't match")
         return password_confirm
 
 
