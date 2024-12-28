@@ -53,7 +53,7 @@ class Device(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='devices')
     device_name = models.CharField(max_length=255, default="Unknown Device")
     cookie_value = models.CharField(max_length=255, unique=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    last_login = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"{self.user.username} - {self.device_name}"

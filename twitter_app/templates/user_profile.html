@@ -38,7 +38,10 @@
                     {% if message.image %}
                         <img src="{{ message.image.url }}" alt="Uploaded Image" class="posted-image">
                     {% endif %}
-                    {% if request.user.id == message.user.id %}
+                    <p>profile_user.username: {{ profile_user.username }}</p>
+                    <p>username: {{ username }}</p>
+                    {% if profile_user.username == username %}
+
                         <form action="{% url 'delete_message' message.id %}" method="POST" class="delete-form">
                             {% csrf_token %}
                             <button type="submit" class="delete-button" title="Delete Message">

@@ -46,7 +46,7 @@
                     {% endif %}
 
                     <!-- Delete Button Displayed Only for Message Owner -->
-                    {% if message.user.id == request.user.id %}
+                    {% if message.user.username == username %}
                         <form action="{% url 'delete_message' message.id %}" method="POST" class="delete-form">
                             {% csrf_token %}
                             <button type="submit" class="delete-button" title="Delete Message">

@@ -1,15 +1,14 @@
 from uuid import uuid4
 
-import bleach
-import markdown
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.timezone import now
 
-from twitter_app.forms import MessageForm, LoginForm, AvatarForm
+from twitter_app.forms import LoginForm, AvatarForm
 from twitter_app.forms import RegisterForm
 from twitter_app.models import Message, Device
 from twitter_app.models import User
-from twitter_app.utils import check_password, hash_password, ALLOWED_TAGS, ALLOWED_ATTRIBUTES, COOKIE_MAX_AGE
+from twitter_app.utils import check_password, hash_password, COOKIE_MAX_AGE
 
 
 def index(request):
@@ -42,12 +41,25 @@ def login_view(request):
         try:
             user = User.objects.get(username=username)
             if check_password(password, user.password):
-                # Generate a unique device cookie
                 cookie_value = str(uuid4())
-                Device.objects.create(user=user, device_name=request.META.get('HTTP_USER_AGENT', 'Unknown Device'),
-                                      cookie_value=cookie_value)
+                device_name = request.META.get('HTTP_USER_AGENT', 'Unknown Device')
 
-                # Set cookies
+                # Check if the device already exists
+                existing_device = user.devices.filter(device_name=device_name).first()
+                if existing_device:
+                    # Update the existing device's last login and cookie value
+                    existing_device.cookie_value = cookie_value
+                    existing_device.last_login = now()
+                    existing_device.save()
+                else:
+                    # Create a new device with the last login set to now
+                    Device.objects.create(
+                        user=user,
+                        device_name=device_name,
+                        cookie_value=cookie_value,
+                        last_login=now()
+                    )
+
                 response = redirect('home')
                 response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
                 response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE)
@@ -74,24 +86,12 @@ def register(request):
     return render(request, 'register.html', {'form': form})
 
 
-def home_view(request):
-    username = request.COOKIES.get('username')
-    if not username:
-        return redirect('login')
-
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        return redirect('login')
-
-    messages_list = Message.objects.filter(status=1).order_by('-created_at')
-    return render(request, 'index.html', {'messages': messages_list, 'username': username})
-
-
 def logout_view(request):
     response = redirect('login')
     response.delete_cookie('username')
     response.delete_cookie('device_cookie')
+    response.set_cookie('username', '', expires=0)
+    response.set_cookie('device_cookie', '', expires=0)
     messages.success(request, 'You have been logged out.')
     return response
 
@@ -110,28 +110,36 @@ def delete_message(request, message_id):
 
 
 def user_profile(request, username):
-    cookie_username = request.COOKIES.get('username')
-    if not cookie_username or cookie_username != username:
-        return redirect('login')
+    cookie_username = request.COOKIES.get('username')  # Get the logged-in user's username
 
+    # Ensure the logged-in user is valid
     try:
-        user = User.objects.get(username=username)
+        logged_in_user = User.objects.get(username=cookie_username)
     except User.DoesNotExist:
         return redirect('login')
 
-    user_messages = Message.objects.filter(user=user, status=1).order_by('-created_at')
+    # Ensure the requested profile exists
+    try:
+        profile_user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return redirect('login')
+
+    # Fetch messages for the requested profile
+    user_messages = Message.objects.filter(user=profile_user, status=1).order_by('-created_at')
     form = AvatarForm()
 
     if request.method == 'POST':
-        form = AvatarForm(request.POST, request.FILES, instance=user)
+        form = AvatarForm(request.POST, request.FILES, instance=profile_user)
         if form.is_valid():
             form.save()
             return redirect('user_profile', username=username)
 
+    # Pass both the logged-in user and the profile user to the template
     return render(request, 'user_profile.html', {
-        'profile_user': user,
-        'messages': user_messages,
-        'form': form
+        'profile_user': profile_user,  # The user whose profile is being viewed
+        'messages': user_messages,  # Their messages
+        'form': form,
+        'username': cookie_username,  # The logged-in user's username
     })
 
 
@@ -145,20 +153,31 @@ def list_user_devices(request):
     except User.DoesNotExist:
         return redirect('login')
 
-    devices = user.devices.all()
-    return render(request, 'device.html', {'devices': devices})
+    devices = Device.objects.filter(user=user)
+    return render(request, 'device.html', {'devices': devices, 'username': username})
 
 
 def delete_device_cookie(request, device_id):
     username = request.COOKIES.get('username')
+    device_cookie = request.COOKIES.get('device_cookie')
     if not username:
         return redirect('login')
 
     try:
         user = User.objects.get(username=username)
         device = get_object_or_404(Device, id=device_id, user=user)
+
+        # Check if the current device matches the one being deleted
+        response = redirect('list_user_devices')
+        if device.cookie_value == device_cookie:
+            # Delete cookies from the browser if they match
+            response.delete_cookie('username')
+            response.delete_cookie('device_cookie')
+
+        # Remove the device from the database
         device.delete()
+        messages.success(request, 'Device successfully removed.')
     except User.DoesNotExist:
         return redirect('login')
 
-    return redirect('list_user_devices')
+    return response

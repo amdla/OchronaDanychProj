@@ -5,5 +5,4 @@ docker (kys)
 safe connection using web server as a proxy NGINX using HTTPS
 
 Content-Security-Policy mechanism against XSS
-log devices that are connected to the account?
 switch off the server header

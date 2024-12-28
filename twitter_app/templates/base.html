@@ -12,37 +12,36 @@
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg">
-    <a class="navbar-brand" href="{% url 'home' %}">Homepage</a>
+{% if username %}
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="{% url 'home' %}">Homepage</a>
 
-    <!-- Theme Toggle Button -->
-    <button id="theme-toggle" class="btn btn-sm theme-toggle-btn" aria-label="Toggle dark mode">
-        <span class="theme-icon-light" style="display: none;">🌙</span>
-        <span class="theme-icon-dark">☀️</span>
-    </button>
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle" class="btn btn-sm theme-toggle-btn" aria-label="Toggle dark mode">
+            <span class="theme-icon-light" style="display: none;">🌙</span>
+            <span class="theme-icon-dark">☀️</span>
+        </button>
 
-    <div class="collapse navbar-collapse">
-        <ul class="navbar-nav ml-auto">
-            {% if request.COOKIES.user_id %}
+        <!-- Assuming 'username' is passed to the template context from your Django views -->
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                {% if username %}
+                    <a class="nav-link" href="{% url 'user_profile' username %}">My Profile</a>
+                {% else %}
+                    <a class="nav-link" href="{% url 'login' %}">No i znowu username nie dziala z cookies</a>
+                {% endif %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'list_user_devices' %}">Devices</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">Logout</a>
                 </li>
-            {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'login' %}">Login</a>
-                </li>
-            {% endif %}
-        </ul>
-    </div>
-</nav>
+            </ul>
+        </div>
 
-<div class="avatar-container">
-    {% if username %}
-        <a href="{% url 'user_profile' username %}">
-            <img src="{{ user.avatar.url }}" class="user-avatar" alt="Profile">
-        </a>
-    {% endif %}
-</div>
+    </nav>
+{% endif %}
 
 <div class="container mt-5">
     {% block content %}
