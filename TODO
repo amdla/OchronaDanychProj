@@ -4,5 +4,5 @@ reset password using 2FA
 docker (kys)
 safe connection using web server as a proxy NGINX using HTTPS
 
-Content-Security-Policy mechanism against XSS
 switch off the server header
+fix add image for message posting
