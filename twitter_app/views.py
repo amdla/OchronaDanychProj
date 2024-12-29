@@ -1,22 +1,29 @@
 import base64
+import io
 import uuid
-from uuid import uuid4
 
 import pyotp
 import qrcode
-import io
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
-from twitter_app.forms import LoginForm, AvatarForm, MessageForm
-from twitter_app.forms import RegisterForm
-from twitter_app.models import Message, Device
-from twitter_app.models import User
+from twitter_app.forms import (
+    LoginForm,
+    AvatarForm,
+    MessageForm,
+    RegisterForm
+)
+from twitter_app.models import (
+    Message,
+    Device,
+    User
+)
 from twitter_app.utils import check_password, hash_password, COOKIE_MAX_AGE
 
 
 def index(request):
+    """Home page (displays messages). Requires valid 'username' and 'device_cookie'."""
     username = request.COOKIES.get('username')
     device_cookie = request.COOKIES.get('device_cookie')
 
@@ -32,26 +39,16 @@ def index(request):
         return redirect('login')
 
     if request.method == 'POST':
-        # Instantiate the form with POST data and uploaded file(s)
         form = MessageForm(request.POST, request.FILES)
         if form.is_valid():
-            # Create a new message object but don't save to DB yet
             new_message = form.save(commit=False)
-            new_message.user = user  # Assign the user who posted the message
+            new_message.user = user
             new_message.save()
-
-            # Optionally add a success message for feedback
             messages.success(request, "Message posted successfully!")
-
-            # Redirect so the user sees the fresh list of messages
             return redirect('home')
-        else:
-            # If invalid, Django will show form errors in the template
-            pass
     else:
         form = MessageForm()
 
-    # Pull the full list of messages to display
     messages_list = Message.objects.filter(status=1).order_by('-created_at')
     return render(request, 'index.html', {
         'messages': messages_list,
@@ -61,11 +58,6 @@ def index(request):
 
 
 def login_view(request):
-    """
-    1) Check the username/password
-    2) If user.two_factor_enabled, redirect to verify_2fa
-    3) Otherwise, set device cookies and log in
-    """
     form = LoginForm(request.POST or None)
 
     if request.method == 'POST' and form.is_valid():
@@ -78,20 +70,22 @@ def login_view(request):
             user = None
 
         if user and check_password(password, user.password):
-            # If user has 2FA enabled, we do a partial login and redirect to 2FA verification
+
+            # -------------------------------
+            # 2FA Branching Logic
+            # -------------------------------
             if user.two_factor_enabled:
-                # Generate a new cookie value for this device
-                cookie_value = str(uuid.uuid4())
-                device_name = request.META.get('HTTP_USER_AGENT', 'Unknown Device')
+                # If TFE is True, check if totp_secret exists
+                if not user.totp_secret:
+                    # Force them to set up 2FA
+                    messages.info(request, "Please complete 2FA setup first.")
 
-                # Store info in session until TOTP is verified
-                request.session['2fa_user_id'] = user.id
-                request.session['pending_cookie_value'] = cookie_value
-                request.session['pending_device_name'] = device_name
+                    # Store the user ID in a special cookie for setup only
+                    response = redirect('setup_2fa')
+                    response.set_cookie('setup_2fa_user_id', str(user.id), max_age=300)
+                    return response
 
-                return redirect('verify_2fa')
-            else:
-                # 2FA not enabled – proceed to finalize the login
+                # Otherwise, TFE=True AND totp_secret is set => do normal 2FA verify
                 cookie_value = str(uuid.uuid4())
                 device_name = request.META.get('HTTP_USER_AGENT', 'Unknown Device')
 
@@ -108,13 +102,37 @@ def login_view(request):
                         last_login=now()
                     )
 
-                # Create response and set cookies
+                # Temporarily store user info in cookies for TOTP verify
+                response = redirect('verify_2fa')
+                response.set_cookie('2fa_user_id', str(user.id), max_age=300)  # for verify_2fa
+                response.set_cookie('pending_cookie_value', cookie_value, max_age=300)
+                response.set_cookie('pending_device_name', device_name, max_age=300)
+                return response
+
+            else:
+                # 2FA not enabled => finalize login
+                cookie_value = str(uuid.uuid4())
+                device_name = request.META.get('HTTP_USER_AGENT', 'Unknown Device')
+
+                existing_device = user.devices.filter(device_name=device_name).first()
+                if existing_device:
+                    existing_device.cookie_value = cookie_value
+                    existing_device.last_login = now()
+                    existing_device.save()
+                else:
+                    Device.objects.create(
+                        user=user,
+                        device_name=device_name,
+                        cookie_value=cookie_value,
+                        last_login=now()
+                    )
+
                 response = redirect('home')
                 response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
                 response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE)
-
                 messages.success(request, "Logged in successfully!")
                 return response
+
         else:
             messages.error(request, "Invalid username or password.")
 
@@ -122,12 +140,20 @@ def login_view(request):
 
 
 def register(request):
+    """
+    Register a new user.
+    If 'two_factor_enabled' is True by default in the model,
+    the user must do setup_2fa before they can log in with TOTP.
+    """
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save(commit=False)
+            # Hash the password
             new_user.password = hash_password(form.cleaned_data["password"])
+            # new_user.two_factor_enabled = True  # (If your model default is True, this is automatic)
             new_user.save()
+            messages.success(request, "Registration successful! Please log in.")
             return redirect('login')
     else:
         form = RegisterForm()
@@ -139,35 +165,37 @@ def logout_view(request):
     response = redirect('login')
     response.delete_cookie('username')
     response.delete_cookie('device_cookie')
-    response.set_cookie('username', '', expires=0)
-    response.set_cookie('device_cookie', '', expires=0)
+    # Also delete any 2FA cookies if they exist
+    response.delete_cookie('2fa_user_id')
+    response.delete_cookie('pending_cookie_value')
+    response.delete_cookie('pending_device_name')
+
     messages.success(request, 'You have been logged out.')
     return response
 
 
 def clear_messages(request):
+    """Utility to clear Django messages from the session."""
     storage = messages.get_messages(request)
     storage.used = True
 
 
 def delete_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
-    message.status = 0  # Soft delete by setting status to 0
+    message.status = 0  # Soft delete
     message.save()
     messages.success(request, 'The message has been deleted.')
     return redirect('home')
 
 
 def user_profile(request, username):
-    cookie_username = request.COOKIES.get('username')  # Get the logged-in user's username
+    cookie_username = request.COOKIES.get('username')  # The logged-in user's username
 
-    # Ensure the requested profile exists
     try:
         profile_user = User.objects.get(username=username)
     except User.DoesNotExist:
         return redirect('index')
 
-    # Fetch messages for the requested profile
     user_messages = Message.objects.filter(user=profile_user, status=1).order_by('-created_at')
     form = AvatarForm()
 
@@ -177,12 +205,11 @@ def user_profile(request, username):
             form.save()
             return redirect('user_profile', username=username)
 
-    # Pass both the logged-in user and the profile user to the template
     return render(request, 'user_profile.html', {
-        'profile_user': profile_user,  # The user whose profile is being viewed
-        'messages': user_messages,  # Their messages
+        'profile_user': profile_user,
+        'messages': user_messages,
         'form': form,
-        'username': cookie_username,  # The logged-in user's username
+        'username': cookie_username,
     })
 
 
@@ -210,14 +237,12 @@ def delete_device_cookie(request, device_id):
         user = User.objects.get(username=username)
         device = get_object_or_404(Device, id=device_id, user=user)
 
-        # Check if the current device matches the one being deleted
         response = redirect('list_user_devices')
         if device.cookie_value == device_cookie:
             # Delete cookies from the browser if they match
             response.delete_cookie('username')
             response.delete_cookie('device_cookie')
 
-        # Remove the device from the database
         device.delete()
         messages.success(request, 'Device successfully removed.')
     except User.DoesNotExist:
@@ -227,50 +252,54 @@ def delete_device_cookie(request, device_id):
 
 
 def setup_2fa(request):
-    """
-    A view to let the user enable 2FA:
-    1) Generate a TOTP secret if not present
-    2) Generate a QR code as base64
-    3) Prompt the user to verify the 6-digit code
-    """
-    user = request.user  # If you're using a custom auth system, ensure request.user is your custom User.
+    # Instead of requiring a logged-in user, read the partial ID
+    user_id = request.COOKIES.get('setup_2fa_user_id')
+    if not user_id:
+        messages.error(request, "No 2FA setup data found. Please log in again.")
+        return redirect('login')
 
-    # Generate or retrieve TOTP secret
+    user = get_object_or_404(User, pk=user_id)
+
+    # If user.totp_secret is missing, generate it
     if not user.totp_secret:
         user.totp_secret = pyotp.random_base32()
         user.save()
 
     totp = pyotp.TOTP(user.totp_secret)
 
-    # Create provisioning URL recognized by Google Authenticator
-    # e.g., 'otpauth://totp/MyAppName:username?secret=SECRET&issuer=MyAppName'
+    # Create provisioning URL
     otp_auth_url = totp.provisioning_uri(
         name=user.username,
         issuer_name="MyDjangoApp"
     )
 
-    # Generate QR code image
-    qr = qrcode.QRCode(box_size=6, border=2)
-    qr.add_data(otp_auth_url)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
+    # Pass data (otp_auth_url) directly to make()
+    img = qrcode.make(otp_auth_url, box_size=6, border=2)
+    # No need to add_data() or make() again, because it's a one-liner
 
-    # Convert QR image to PNG bytes
+    # Convert QR to base64
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
     qr_code_bytes = buffer.getvalue()
-
-    # Encode the PNG bytes to base64
     qr_code_base64 = base64.b64encode(qr_code_bytes).decode('utf-8')
 
     if request.method == 'POST':
         code = request.POST.get('code', '')
         if totp.verify(code):
-            # Mark 2FA as enabled
-            user.two_factor_enabled = True
+            user.two_factor_enabled = True  # (already True by default, but just to confirm)
             user.save()
-            messages.success(request, "Two-factor authentication enabled successfully!")
-            return redirect('home')  # or wherever you want
+
+            # 2FA setup is complete. Now the user can do a normal login flow with TOTP.
+
+            # Option A: Redirect them to the login page
+            messages.success(request, "Two-factor authentication enabled. Please log in again.")
+            response = redirect('login')
+
+            # Clear the partial setup cookie
+            response.delete_cookie('setup_2fa_user_id')
+
+            return response
+
         else:
             messages.error(request, "Invalid code, please try again.")
 
@@ -281,13 +310,16 @@ def setup_2fa(request):
 
 def verify_2fa(request):
     """
-    1) Retrieve user ID + pending device info from session
-    2) If TOTP code is correct, finalize device/cookie
-    3) If not, show error
+    Completes the 2FA login flow for a user who already:
+    1) Has two_factor_enabled == True
+    2) Has a valid totp_secret
     """
-    user_id = request.session.get('2fa_user_id')
-    if not user_id:
-        # No user in session; go back to login
+    user_id = request.COOKIES.get('2fa_user_id')
+    cookie_value = request.COOKIES.get('pending_cookie_value')
+    device_name = request.COOKIES.get('pending_device_name')
+
+    if not user_id or not cookie_value or not device_name:
+        messages.error(request, "Could not find your pending 2FA data. Please log in again.")
         return redirect('login')
 
     user = get_object_or_404(User, pk=user_id)
@@ -297,40 +329,20 @@ def verify_2fa(request):
         totp = pyotp.TOTP(user.totp_secret)
 
         if totp.verify(code):
-            # Code is valid
-            cookie_value = request.session.get('pending_cookie_value')
-            device_name = request.session.get('pending_device_name')
+            # Code is valid -> finalize login
+            response = redirect('home')
 
-            if cookie_value and device_name:
-                # Create or update the device
-                existing_device = user.devices.filter(device_name=device_name).first()
-                if existing_device:
-                    existing_device.cookie_value = cookie_value
-                    existing_device.last_login = now()
-                    existing_device.save()
-                else:
-                    Device.objects.create(
-                        user=user,
-                        device_name=device_name,
-                        cookie_value=cookie_value,
-                        last_login=now()
-                    )
+            # Set real login cookies
+            response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
+            response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE)
 
-                # Create a response and set cookies
-                response = redirect('home')
-                response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
-                response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE)
+            # Remove temp cookies
+            response.delete_cookie('2fa_user_id')
+            response.delete_cookie('pending_cookie_value')
+            response.delete_cookie('pending_device_name')
 
-                # Clear the 2FA session data
-                del request.session['2fa_user_id']
-                del request.session['pending_cookie_value']
-                del request.session['pending_device_name']
-
-                messages.success(request, "2FA verification successful!")
-                return response
-            else:
-                messages.error(request, "No device data found. Please log in again.")
-                return redirect('login')
+            messages.success(request, "2FA verification successful!")
+            return response
         else:
             messages.error(request, "Invalid TOTP code. Please try again.")
 
