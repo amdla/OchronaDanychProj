@@ -1,23 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Verify 2FA</title>
-</head>
-<body>
-<h1>Two-Factor Authentication</h1>
-<p>Please enter the 6-digit code from your authenticator app.</p>
+{% extends 'base.html' %}
 
-<form method="POST">
-    {% csrf_token %}
-    <label>Code:</label>
-    <input type="text" name="code" maxlength="6" required>
-    <button type="submit">Verify</button>
-</form>
+{% block title %}Verify 2FA{% endblock %}
 
-{% if messages %}
-    {% for message in messages %}
-        <p style="color: red;">{{ message }}</p>
-    {% endfor %}
-{% endif %}
-</body>
-</html>
+{% block content %}
+    <h1>Two-Factor Authentication</h1>
+
+    <p>Please enter the 6-digit code from your authenticator app to proceed.</p>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-danger" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="code">Code:</label>
+            <input type="text" name="code" id="code" class="form-control" maxlength="6" required>
+        </div>
+
+        <br>
+        <button type="submit" class="btn btn-primary">Verify</button>
+    </form>
+{% endblock %}

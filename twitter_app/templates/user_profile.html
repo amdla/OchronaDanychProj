@@ -4,7 +4,7 @@
     <h1>{{ profile_user.username }}'s Profile</h1>
     <div class="profile-header">
         <img src="{{ profile_user.avatar.url }}" class="user-avatar-large" alt="Profile Picture">
-        {% if request.user == profile_user %}
+        {% if profile_user.username == username %}
             <!-- Button to show form -->
             <button onclick="document.getElementById('avatar-form').style.display='block'" class="btn btn-primary">
                 Change Avatar

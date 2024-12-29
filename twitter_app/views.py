@@ -153,7 +153,7 @@ def register(request):
             new_user.password = hash_password(form.cleaned_data["password"])
             # new_user.two_factor_enabled = True  # (If your model default is True, this is automatic)
             new_user.save()
-            messages.success(request, "Registration successful! Please log in.")
+            messages.success(request, "Registration successful! Please log in and set up two-factor authentication.")
             return redirect('login')
     else:
         form = RegisterForm()
