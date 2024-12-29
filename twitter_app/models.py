@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.timezone import now
+import pyotp
 
 
 class User(models.Model):
@@ -9,10 +10,17 @@ class User(models.Model):
     password = models.CharField(max_length=255)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/standard_avatar.jpg')
     created_at = models.DateTimeField(default=timezone.now)
+    totp_secret = models.CharField(max_length=100, blank=True, null=True)
+    two_factor_enabled = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
 
+    def generate_totp_secret(self):
+        """Generate a new TOTP secret if one doesn't already exist."""
+        if not self.totp_secret:
+            self.totp_secret = pyotp.random_base32()
+            self.save()
 
 class Message(models.Model):
     content = models.TextField()

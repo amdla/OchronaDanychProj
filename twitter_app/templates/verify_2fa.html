@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify 2FA</title>
+</head>
+<body>
+<h1>Two-Factor Authentication</h1>
+<p>Please enter the 6-digit code from your authenticator app.</p>
+
+<form method="POST">
+    {% csrf_token %}
+    <label>Code:</label>
+    <input type="text" name="code" maxlength="6" required>
+    <button type="submit">Verify</button>
+</form>
+
+{% if messages %}
+    {% for message in messages %}
+        <p style="color: red;">{{ message }}</p>
+    {% endfor %}
+{% endif %}
+</body>
+</html>
