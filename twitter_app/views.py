@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
-from twitter_app.forms import LoginForm, AvatarForm
+from twitter_app.forms import LoginForm, AvatarForm, MessageForm
 from twitter_app.forms import RegisterForm
 from twitter_app.models import Message, Device
 from twitter_app.models import User
@@ -18,17 +18,41 @@ def index(request):
     if not username or not device_cookie:
         return redirect('login')
 
+    # Validate the user & device
     try:
         user = User.objects.get(username=username)
-        # Validate the device cookie
         if not user.devices.filter(cookie_value=device_cookie).exists():
             return redirect('login')
     except User.DoesNotExist:
         return redirect('login')
 
-    # Fetch messages for the user
+    if request.method == 'POST':
+        # Instantiate the form with POST data and uploaded file(s)
+        form = MessageForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Create a new message object but don't save to DB yet
+            new_message = form.save(commit=False)
+            new_message.user = user  # Assign the user who posted the message
+            new_message.save()
+
+            # Optionally add a success message for feedback
+            messages.success(request, "Message posted successfully!")
+
+            # Redirect so the user sees the fresh list of messages
+            return redirect('home')
+        else:
+            # If invalid, Django will show form errors in the template
+            pass
+    else:
+        form = MessageForm()
+
+    # Pull the full list of messages to display
     messages_list = Message.objects.filter(status=1).order_by('-created_at')
-    return render(request, 'index.html', {'messages': messages_list, 'username': username})
+    return render(request, 'index.html', {
+        'messages': messages_list,
+        'username': username,
+        'form': form
+    })
 
 
 def login_view(request):

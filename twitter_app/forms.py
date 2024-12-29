@@ -16,7 +16,7 @@ class MessageForm(forms.ModelForm):
 
     class Meta:
         model = Message
-        fields = ['content', 'image_url', 'image']
+        fields = ['content', 'image']
 
     def clean_content(self):
         content = self.cleaned_data.get('content')
