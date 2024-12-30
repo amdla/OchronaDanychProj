@@ -347,8 +347,15 @@ def verify_2fa(request):
 
 def toggle_2fa(request):
     if request.method == 'POST':
-        user = request.user
+        # Pull username from cookies
+        cookie_username = request.COOKIES.get('username')
+
+        user = get_object_or_404(User, username=cookie_username)
         user.two_factor_enabled = not user.two_factor_enabled
         user.save()
-        return JsonResponse({'status': 'success', 'two_factor_enabled': user.two_factor_enabled})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+        # return html response not json response nor redirect
+        return redirect('user_profile', username=cookie_username)
+
+
+def reset_password(request):
+    pass
