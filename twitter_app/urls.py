@@ -17,6 +17,7 @@ urlpatterns = [
     path('devices/delete/<int:device_id>/', views.delete_device_cookie, name='delete_device_cookie'),
     path('verify_2fa/', views.verify_2fa, name='verify_2fa'),
     path('setup_2fa/', views.setup_2fa, name='setup_2fa'),
+    path('toggle-2fa/', views.toggle_2fa, name='toggle_2fa'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

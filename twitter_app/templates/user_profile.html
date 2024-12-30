@@ -5,10 +5,20 @@
     <div class="profile-header">
         <img src="{{ profile_user.avatar.url }}" class="user-avatar-large" alt="Profile Picture">
         {% if profile_user.username == username %}
-            <!-- Button to show form -->
+            <!-- Both buttons in the same style -->
             <button onclick="document.getElementById('avatar-form').style.display='block'" class="btn btn-primary">
                 Change Avatar
             </button>
+            <form action="{% url 'toggle_2fa' %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    {% if user_2fa_enabled %}
+                        Disable Two-Factor Authentication
+                    {% else %}
+                        Enable Two-Factor Authentication
+                    {% endif %}
+                </button>
+            </form>
             <!-- Hidden form to update avatar -->
             <div id="avatar-form" style="display:none;">
                 <form method="POST" enctype="multipart/form-data">

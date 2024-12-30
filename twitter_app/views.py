@@ -5,6 +5,7 @@ import uuid
 import pyotp
 import qrcode
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
@@ -174,12 +175,6 @@ def logout_view(request):
     return response
 
 
-def clear_messages(request):
-    """Utility to clear Django messages from the session."""
-    storage = messages.get_messages(request)
-    storage.used = True
-
-
 def delete_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
     message.status = 0  # Soft delete
@@ -210,6 +205,7 @@ def user_profile(request, username):
         'messages': user_messages,
         'form': form,
         'username': cookie_username,
+        'user_2fa_enabled': profile_user.two_factor_enabled
     })
 
 
@@ -347,3 +343,12 @@ def verify_2fa(request):
             messages.error(request, "Invalid TOTP code. Please try again.")
 
     return render(request, 'verify_2fa.html')
+
+
+def toggle_2fa(request):
+    if request.method == 'POST':
+        user = request.user
+        user.two_factor_enabled = not user.two_factor_enabled
+        user.save()
+        return JsonResponse({'status': 'success', 'two_factor_enabled': user.two_factor_enabled})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
