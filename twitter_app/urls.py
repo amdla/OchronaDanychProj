@@ -18,7 +18,8 @@ urlpatterns = [
     path('verify_2fa/', views.verify_2fa, name='verify_2fa'),
     path('setup_2fa/', views.setup_2fa, name='setup_2fa'),
     path('toggle-2fa/', views.toggle_2fa, name='toggle_2fa'),
-    path('reset-password/', views.reset_password, name='reset_password'),
+    path('reset_password/', views.reset_password, name='reset_password'),
+    path('forgot_password/', views.forgot_password, name='forgot_password'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

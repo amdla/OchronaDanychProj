@@ -79,3 +79,22 @@ class AvatarForm(forms.ModelForm):
                 raise forms.ValidationError(
                     f"Image size should not exceed {IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES / 1024 / 1024} MB.")
         return avatar
+
+
+class PasswordResetForm(forms.Form):
+    password = forms.CharField(
+        widget=forms.PasswordInput,
+        validators=[RegisterForm.password_validator],
+        label='New Password'
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput,
+        label='Confirm New Password'
+    )
+
+    def clean_password_confirm(self):
+        password = self.cleaned_data.get("password")
+        password_confirm = self.cleaned_data.get("password_confirm")
+        if password and password_confirm and password != password_confirm:
+            raise ValidationError("Passwords don't match")
+        return password_confirm

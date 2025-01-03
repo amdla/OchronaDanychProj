@@ -5,7 +5,6 @@ import uuid
 import pyotp
 import qrcode
 from django.contrib import messages
-from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
@@ -13,7 +12,7 @@ from twitter_app.forms import (
     LoginForm,
     AvatarForm,
     MessageForm,
-    RegisterForm
+    RegisterForm, PasswordResetForm
 )
 from twitter_app.models import (
     Message,
@@ -304,45 +303,24 @@ def setup_2fa(request):
     })
 
 
-def verify_2fa(request):
-    """
-    Completes the 2FA login flow for a user who already:
-    1) Has two_factor_enabled == True
-    2) Has a valid totp_secret
-    """
-    user_id = request.COOKIES.get('2fa_user_id')
-    cookie_value = request.COOKIES.get('pending_cookie_value')
-    device_name = request.COOKIES.get('pending_device_name')
-
-    if not user_id or not cookie_value or not device_name:
-        messages.error(request, "Could not find your pending 2FA data. Please log in again.")
-        return redirect('login')
-
-    user = get_object_or_404(User, pk=user_id)
+def reset_password(request):
+    user_id = request.COOKIES.get('reset_user_id')  # Get user_id from cookie
+    print(f"Reset user_id from cookie: {user_id}")  # Debugging
+    user = get_object_or_404(User, pk=user_id)  # Fetch user by user_id
 
     if request.method == 'POST':
-        code = request.POST.get('code', '')
-        totp = pyotp.TOTP(user.totp_secret)
-
-        if totp.verify(code):
-            # Code is valid -> finalize login
-            response = redirect('home')
-
-            # Set real login cookies
-            response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
-            response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE)
-
-            # Remove temp cookies
-            response.delete_cookie('2fa_user_id')
-            response.delete_cookie('pending_cookie_value')
-            response.delete_cookie('pending_device_name')
-
-            messages.success(request, "2FA verification successful!")
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data['password']
+            user.password = hash_password(new_password)  # Hash the new password
+            user.save()
+            response = redirect('login')
+            response.delete_cookie('reset_user_id')  # Clear the cookie
+            messages.success(request, "Password reset successful. Please log in with your new password.")
             return response
-        else:
-            messages.error(request, "Invalid TOTP code. Please try again.")
-
-    return render(request, 'verify_2fa.html')
+    else:
+        form = PasswordResetForm()
+    return render(request, 'reset_password.html', {'form': form})
 
 
 def toggle_2fa(request):
@@ -357,5 +335,74 @@ def toggle_2fa(request):
         return redirect('user_profile', username=cookie_username)
 
 
-def reset_password(request):
-    pass
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')  # Get email from the form
+        try:
+            user = User.objects.get(email=email)  # Fetch user by email
+            if user.two_factor_enabled:
+                response = redirect('verify_2fa')
+                response.set_cookie('reset_user_id', str(user.id), max_age=300)  # Store user_id in cookie
+                response.set_cookie('reset_purpose', 'password_reset', max_age=300)
+                messages.info(request, "Please verify your 2FA code for password reset.")
+                return response
+            else:
+                messages.error(request, "2FA is not enabled for this account.")
+        except User.DoesNotExist:
+            messages.error(request, "No user with this email exists.")
+    return render(request, 'forgot_password.html')
+
+
+def verify_2fa(request):
+    # Check if this is a password reset flow
+    user_id = request.COOKIES.get('2fa_user_id')  # For login flow
+    reset_user_id = request.COOKIES.get('reset_user_id')  # For password reset flow
+    purpose = request.COOKIES.get('reset_purpose')
+
+    # Determine which flow we're in
+    if purpose == 'password_reset' and reset_user_id:
+        # Password reset flow
+        user = get_object_or_404(User, pk=reset_user_id)  # Fetch user by user_id
+        if request.method == 'POST':
+            code = request.POST.get('code', '')
+            totp = pyotp.TOTP(user.totp_secret)
+            if totp.verify(code):
+                # 2FA verification successful
+                response = redirect('reset_password')
+                response.set_cookie('reset_user_id', str(user.id), max_age=COOKIE_MAX_AGE)
+                response.delete_cookie('reset_purpose')
+                messages.success(request, "2FA verification successful! Please set a new password.")
+                return response
+            else:
+                messages.error(request, "Invalid TOTP code. Please try again.")
+        return render(request, 'verify_2fa.html', {'purpose': purpose})
+
+    # Login flow
+    cookie_value = request.COOKIES.get('pending_cookie_value')
+    device_name = request.COOKIES.get('pending_device_name')
+
+    if not user_id or not cookie_value or not device_name:
+        messages.error(request, "Could not find your pending 2FA data. Please log in again.")
+        return redirect('login')
+
+    user = get_object_or_404(User, pk=user_id)
+
+    if request.method == 'POST':
+        code = request.POST.get('code', '')
+        totp = pyotp.TOTP(user.totp_secret)
+        if totp.verify(code):
+            # Code is valid -> finalize login
+            response = redirect('home')
+            # Set real login cookies
+            response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
+            response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE)
+            # Remove temp cookies
+            response.delete_cookie('2fa_user_id')
+            response.delete_cookie('pending_cookie_value')
+            response.delete_cookie('pending_device_name')
+            messages.success(request, "2FA verification successful!")
+            return response
+        else:
+            messages.error(request, "Invalid TOTP code. Please try again.")
+
+    return render(request, 'verify_2fa.html')
