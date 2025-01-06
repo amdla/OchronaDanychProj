@@ -1,0 +1,363 @@
+/* ==================== LIGHT MODE DEFAULTS ==================== */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
+    background: #ffffff;
+    color: #000000;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0.5rem 1rem;
+    position: sticky; /* Makes the navbar sticky */
+    top: 0; /* Stick to the top of the viewport */
+    z-index: 1000; /* Ensure the navbar stays above other elements */
+}
+
+.navbar .navbar-brand {
+    color: #007bff;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.navbar .nav-link {
+    color: #007bff;
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+}
+
+.navbar .nav-link:hover {
+    color: #0056b3;
+}
+
+/* Container */
+.container {
+    flex: 1;
+    padding: 2rem 1rem;
+    max-width: 800px; /* Set a max-width for the content */
+    margin: 0 auto; /* Center the content horizontally */
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 1.5rem;
+}
+
+p, label, .content, .message-text {
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #000000;
+}
+
+.username {
+    font-size: 0.95rem;
+    color: #000000;
+}
+
+.username-sep {
+    font-size: 0.95rem;
+    color: #6c757d; /* Muted gray text */
+}
+
+/* Links */
+a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Forms */
+form {
+    background: #f8f9fa;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+form label {
+    color: #000000;
+    font-weight: 600;
+}
+
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    background: #ffffff;
+    color: #000000;
+}
+
+form button[type="submit"] {
+    background: #007bff;
+    color: #ffffff;
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    border: none;
+    transition: background 0.2s ease-in-out;
+}
+
+form button[type="submit"]:hover {
+    background: #0056b3;
+}
+
+.expandable-form {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+#content-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box; /* Ensure padding is included in the width */
+}
+
+.additional-fields {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+/* Form Button */
+.additional-fields button[type="submit"] {
+    background: #007bff;
+    color: #ffffff;
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    border: none;
+    transition: background 0.2s ease-in-out;
+}
+
+.additional-fields button[type="submit"]:hover {
+    background: #0056b3;
+}
+
+.delete-form {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    margin: 0;
+}
+
+/* Delete Button Styling - Gray Circle with Bin Icon */
+/* Delete Button Styling - Blue Circle with Bin Icon */
+.delete-button {
+    background-color: #1da1f2; /* Blue background */
+    border: none; /* No border */
+    color: #fff; /* White icon color */
+    font-size: 16px; /* Icon size */
+    width: 32px; /* Width of the circle */
+    height: 32px; /* Height of the circle */
+    display: flex; /* Center the icon */
+    align-items: center; /* Vertical centering */
+    justify-content: center; /* Horizontal centering */
+    border-radius: 50%; /* Circle shape */
+    cursor: pointer; /* Pointer cursor */
+    transition: background-color 0.2s ease;
+}
+
+.delete-button:hover {
+    background-color: #1991db; /* Slightly darker blue on hover */
+}
+
+
+/* Message Box */
+.message {
+    position: relative; /* Needed for positioning the delete button */
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.message .username {
+    font-weight: 700;
+    color: #000000;
+}
+
+.message-text {
+    color: #000000;
+    margin-bottom: 0.75rem;
+}
+
+.posted-image {
+    max-width: 100%; /* Image won't exceed container width */
+    max-height: 400px; /* Cap the height to 400px */
+    width: auto; /* Maintain aspect ratio */
+    height: auto; /* Maintain aspect ratio */
+    object-fit: contain; /* Fit the image within the box without stretching */
+    border-radius: 8px; /* Rounded corners */
+    border: 1px solid #e0e0e0;
+    display: block; /* Ensure the image behaves like a block element */
+    margin: 0 auto; /* Center the image horizontally */
+}
+
+
+.avatar-container {
+    position: absolute;
+    top: 70px; /* Adjust to appear below the navbar */
+    right: 20px;
+    z-index: 999;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+.user-avatar-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+/* ==================== DARK MODE OVERRIDES ==================== */
+
+body.dark-mode {
+    background: #000000;
+    color: #ffffff;
+}
+
+/* Navbar in Dark Mode */
+body.dark-mode .navbar {
+    position: sticky; /* Makes the navbar sticky */
+    top: 0; /* Stick to the top of the viewport */
+    z-index: 1000; /* Ensure the navbar stays above other elements */
+    background-color: #000000;
+    border-bottom: 1px solid #444;
+}
+
+body.dark-mode .navbar .navbar-brand,
+body.dark-mode .navbar .nav-link {
+    color: #66b2ff;
+}
+
+body.dark-mode .navbar .nav-link:hover {
+    color: #3399ff;
+}
+
+/* General Text in Dark Mode */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6,
+body.dark-mode p,
+body.dark-mode label,
+body.dark-mode .content,
+body.dark-mode .message-text,
+body.dark-mode .username {
+    color: #ffffff;
+}
+
+body.dark-mode .username-sep {
+    color: #b0b3b8; /* Light gray for muted text */
+}
+
+/* Forms in Dark Mode */
+body.dark-mode form {
+    background: #222222;
+    border: 1px solid #555;
+}
+
+body.dark-mode form label {
+    color: #ffffff;
+}
+
+body.dark-mode form input[type="text"],
+body.dark-mode form input[type="password"],
+body.dark-mode form input[type="email"],
+body.dark-mode form textarea {
+    background: #333333;
+    color: #ffffff;
+    border: 1px solid #555;
+}
+
+/* Expandable Form in Dark Mode */
+body.dark-mode #content-input {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+}
+
+body.dark-mode .additional-fields {
+    background-color: #222222;
+    border: 1px solid #555;
+}
+
+/* Form Button in Dark Mode */
+body.dark-mode .additional-fields button[type="submit"] {
+    background: #66b2ff;
+}
+
+body.dark-mode .additional-fields button[type="submit"]:hover {
+    background: #3399ff;
+}
+
+/* Message Box in Dark Mode */
+body.dark-mode .message {
+    background: #222222;
+    border: 1px solid #555;
+}
+
+body.dark-mode .message .username {
+    color: #ffffff;
+}
+
+body.dark-mode .message-text {
+    color: #ffffff;
+}
+
+body.dark-mode .posted-image {
+    border: 1px solid #555;
+}
+
+/* Links in Dark Mode */
+body.dark-mode a {
+    color: #66b2ff;
+}
+
+body.dark-mode a:hover {
+    color: #3399ff;
+}

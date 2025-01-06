@@ -1,13 +1,17 @@
 import os
 from pathlib import Path
 
-# BASE_DIR is the directory where manage.py is located
+import environ
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env()
+environ.Env.read_env()
+
 # Security settings
-SECRET_KEY = 'your-secret-key'  # Pamiętaj, by w produkcji zmienić na coś bezpiecznego
-DEBUG = True  # Ustaw na False w produkcji
-ALLOWED_HOSTS = []  # Dostosuj do swoich domen w produkcji (np. ['yourdomain.com'])
+SECRET_KEY = env('SECRET_KEY')
+DEBUG = False
+ALLOWED_HOSTS = ['*']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -36,7 +40,7 @@ MIDDLEWARE = [
 ]
 
 # Root URL configuration
-ROOT_URLCONF = 'twitter_app.urls'  # Zmieniamy na nazwę swojego projektu
+ROOT_URLCONF = 'twitter_app.urls'
 
 # Templates configuration
 TEMPLATES = [
@@ -56,31 +60,17 @@ TEMPLATES = [
 ]
 
 # WSGI and ASGI applications
-WSGI_APPLICATION = 'twitter_app.wsgi.application'  # Zmieniamy na nazwę swojego projektu
+WSGI_APPLICATION = 'twitter_app.wsgi.application'
 
-# Database configuration (domyślna SQLite dla rozwoju)
+# Database configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',  # Zmieniamy na swoją bazę danych, np. PostgreSQL
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# Password validation
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
 
 # Localization settings
 LANGUAGE_CODE = 'en-us'
@@ -92,12 +82,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, images)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'twitter_app', 'static')]
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = '/app/static/'
 
 # Authentication settings
-LOGIN_URL = 'login'  # Przekierowanie do logowania, jeśli użytkownik nie jest zalogowany
-LOGIN_REDIRECT_URL = 'home'  # Przekierowanie po zalogowaniu
-LOGOUT_REDIRECT_URL = 'home'  # Przekierowanie po wylogowaniu
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
 
-# Email settings (do wysyłania e-maili, np. w przypadku zapomnianego hasła)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Do testów, zmień na prawdziwy backend w produkcji
+# Disable the Server header
+SECURE_HIDE_SERVER_HEADERS = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://localhost']
