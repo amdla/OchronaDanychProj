@@ -2,13 +2,31 @@
 
 {% block content %}
     <h1>{{ profile_user.username }}'s Profile</h1>
+
     <div class="profile-header">
         <img src="{{ profile_user.avatar.url }}" class="user-avatar-large" alt="Profile Picture">
-        {% if request.user == profile_user %}
-            <!-- Button to show form -->
-            <button onclick="document.getElementById('avatar-form').style.display='block'" class="btn btn-primary">
-                Change Avatar
-            </button>
+
+        {% if profile_user.username == username %}
+            <!-- Wrap the avatar and 2FA buttons in a single container -->
+            <div class="profile-actions">
+                <!-- Change Avatar Button -->
+                <button onclick="document.getElementById('avatar-form').style.display='block'" class="btn btn-primary">
+                    Change Avatar
+                </button>
+
+                <!-- Toggle 2FA Form -->
+                <form action="{% url 'toggle_2fa' %}" method="POST" class="toggle-2fa-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        {% if user_2fa_enabled %}
+                            Disable Two-Factor Authentication
+                        {% else %}
+                            Enable Two-Factor Authentication
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+
             <!-- Hidden form to update avatar -->
             <div id="avatar-form" style="display:none;">
                 <form method="POST" enctype="multipart/form-data">
@@ -19,6 +37,7 @@
             </div>
         {% endif %}
     </div>
+
     <br>
     <h3>Posts by {{ profile_user.username }}:</h3>
     <div class="messages mt-4">
@@ -38,10 +57,8 @@
                     {% if message.image %}
                         <img src="{{ message.image.url }}" alt="Uploaded Image" class="posted-image">
                     {% endif %}
-                    <p>profile_user.username: {{ profile_user.username }}</p>
-                    <p>username: {{ username }}</p>
-                    {% if profile_user.username == username %}
 
+                    {% if profile_user.username == username %}
                         <form action="{% url 'delete_message' message.id %}" method="POST" class="delete-form">
                             {% csrf_token %}
                             <button type="submit" class="delete-button" title="Delete Message">
@@ -51,7 +68,7 @@
                     {% endif %}
                 </div>
             </div>
-            {% empty %}
+        {% empty %}
             <p>No posts yet.</p>
         {% endfor %}
     </div>
