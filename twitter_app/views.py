@@ -2,10 +2,16 @@ import base64
 import io
 import uuid
 
+import bleach
+import markdown
 import pyotp
 import qrcode
 from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import (
+    render,
+    redirect,
+    get_object_or_404
+)
 from django.utils.timezone import now
 
 from twitter_app.forms import (
@@ -19,7 +25,13 @@ from twitter_app.models import (
     Device,
     User
 )
-from twitter_app.utils import check_password, hash_password, COOKIE_MAX_AGE
+from twitter_app.utils import (
+    check_password,
+    hash_password,
+    COOKIE_MAX_AGE,
+    ALLOWED_TAGS,
+    ALLOWED_ATTRIBUTES
+)
 
 
 def index(request):
@@ -50,6 +62,15 @@ def index(request):
         form = MessageForm()
 
     messages_list = Message.objects.filter(status=1).order_by('-created_at')
+    for message in messages_list:
+        html_content = markdown.markdown(message.content)
+        sanitized_content = bleach.clean(
+            html_content,
+            tags=ALLOWED_TAGS,
+            attributes=ALLOWED_ATTRIBUTES
+        )
+        message.content = sanitized_content
+
     return render(request, 'index.html', {
         'messages': messages_list,
         'username': username,
@@ -191,6 +212,14 @@ def user_profile(request, username):
         return redirect('index')
 
     user_messages = Message.objects.filter(user=profile_user, status=1).order_by('-created_at')
+    for message in user_messages:
+        html_content = markdown.markdown(message.content)
+        sanitized_content = bleach.clean(
+            html_content,
+            tags=ALLOWED_TAGS,
+            attributes=ALLOWED_ATTRIBUTES
+        )
+        message.content = sanitized_content
     form = AvatarForm()
 
     if request.method == 'POST':
