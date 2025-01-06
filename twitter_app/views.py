@@ -29,13 +29,13 @@ from twitter_app.utils import (
     check_password,
     hash_password,
     COOKIE_MAX_AGE,
+    TWO_FA_COOKIE_MAX_AGE,
     ALLOWED_TAGS,
     ALLOWED_ATTRIBUTES
 )
 
 
 def index(request):
-    """Home page (displays messages). Requires valid 'username' and 'device_cookie'."""
     username = request.COOKIES.get('username')
     device_cookie = request.COOKIES.get('device_cookie')
 
@@ -161,18 +161,11 @@ def login_view(request):
 
 
 def register(request):
-    """
-    Register a new user.
-    If 'two_factor_enabled' is True by default in the model,
-    the user must do setup_2fa before they can log in with TOTP.
-    """
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save(commit=False)
-            # Hash the password
             new_user.password = hash_password(form.cleaned_data["password"])
-            # new_user.two_factor_enabled = True  # (If your model default is True, this is automatic)
             new_user.save()
             messages.success(request, "Registration successful! Please log in and set up two-factor authentication.")
             return redirect('login')
@@ -186,21 +179,14 @@ def logout_view(request):
     response = redirect('login')
     response.delete_cookie('username')
     response.delete_cookie('device_cookie')
-    # Also delete any 2FA cookies if they exist
+
+    # delete any 2FA cookies if they exist
     response.delete_cookie('2fa_user_id')
     response.delete_cookie('pending_cookie_value')
     response.delete_cookie('pending_device_name')
 
     messages.success(request, 'You have been logged out.')
     return response
-
-
-def delete_message(request, message_id):
-    message = get_object_or_404(Message, id=message_id)
-    message.status = 0  # Soft delete
-    message.save()
-    messages.success(request, 'The message has been deleted.')
-    return redirect('home')
 
 
 def user_profile(request, username):
@@ -276,7 +262,6 @@ def delete_device_cookie(request, device_id):
 
 
 def setup_2fa(request):
-    # Instead of requiring a logged-in user, read the partial ID
     user_id = request.COOKIES.get('setup_2fa_user_id')
     if not user_id:
         messages.error(request, "No 2FA setup data found. Please log in again.")
@@ -297,9 +282,8 @@ def setup_2fa(request):
         issuer_name="MyDjangoApp"
     )
 
-    # Pass data (otp_auth_url) directly to make()
+    # Create
     img = qrcode.make(otp_auth_url, box_size=6, border=2)
-    # No need to add_data() or make() again, because it's a one-liner
 
     # Convert QR to base64
     buffer = io.BytesIO()
@@ -310,12 +294,9 @@ def setup_2fa(request):
     if request.method == 'POST':
         code = request.POST.get('code', '')
         if totp.verify(code):
-            user.two_factor_enabled = True  # (already True by default, but just to confirm)
+            user.two_factor_enabled = True
             user.save()
 
-            # 2FA setup is complete. Now the user can do a normal login flow with TOTP.
-
-            # Option A: Redirect them to the login page
             messages.success(request, "Two-factor authentication enabled. Please log in again.")
             response = redirect('login')
 
@@ -332,19 +313,26 @@ def setup_2fa(request):
     })
 
 
+def delete_message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+    message.status = 0  # Soft delete by setting status to 0
+    message.save()
+    messages.success(request, 'The message has been deleted.')
+    return redirect('home')
+
+
 def reset_password(request):
-    user_id = request.COOKIES.get('reset_user_id')  # Get user_id from cookie
-    print(f"Reset user_id from cookie: {user_id}")  # Debugging
-    user = get_object_or_404(User, pk=user_id)  # Fetch user by user_id
+    user_id = request.COOKIES.get('reset_user_id')
+    user = get_object_or_404(User, pk=user_id)
 
     if request.method == 'POST':
         form = PasswordResetForm(request.POST)
         if form.is_valid():
             new_password = form.cleaned_data['password']
-            user.password = hash_password(new_password)  # Hash the new password
+            user.password = hash_password(new_password)
             user.save()
             response = redirect('login')
-            response.delete_cookie('reset_user_id')  # Clear the cookie
+            response.delete_cookie('reset_user_id')
             messages.success(request, "Password reset successful. Please log in with your new password.")
             return response
     else:
@@ -354,44 +342,37 @@ def reset_password(request):
 
 def toggle_2fa(request):
     if request.method == 'POST':
-        # Pull username from cookies
         cookie_username = request.COOKIES.get('username')
 
         user = get_object_or_404(User, username=cookie_username)
         user.two_factor_enabled = not user.two_factor_enabled
         user.save()
-        # return html response not json response nor redirect
         return redirect('user_profile', username=cookie_username)
 
 
 def forgot_password(request):
     if request.method == 'POST':
-        email = request.POST.get('email')  # Get email from the form
+        email = request.POST.get('email')
         try:
             user = User.objects.get(email=email)  # Fetch user by email
-            if user.two_factor_enabled:
-                response = redirect('verify_2fa')
-                response.set_cookie('reset_user_id', str(user.id), max_age=300)  # Store user_id in cookie
-                response.set_cookie('reset_purpose', 'password_reset', max_age=300)
-                messages.info(request, "Please verify your 2FA code for password reset.")
-                return response
-            else:
-                messages.error(request, "2FA is not enabled for this account.")
+            response = redirect('verify_2fa')
+            response.set_cookie('reset_user_id', str(user.id), max_age=TWO_FA_COOKIE_MAX_AGE)  # Store user_id in cookie
+            response.set_cookie('reset_purpose', 'password_reset', max_age=TWO_FA_COOKIE_MAX_AGE)
+            messages.info(request, "Please verify your 2FA code for password reset.")
+            return response
         except User.DoesNotExist:
             messages.error(request, "No user with this email exists.")
     return render(request, 'forgot_password.html')
 
 
 def verify_2fa(request):
-    # Check if this is a password reset flow
     user_id = request.COOKIES.get('2fa_user_id')  # For login flow
     reset_user_id = request.COOKIES.get('reset_user_id')  # For password reset flow
     purpose = request.COOKIES.get('reset_purpose')
 
-    # Determine which flow we're in
     if purpose == 'password_reset' and reset_user_id:
         # Password reset flow
-        user = get_object_or_404(User, pk=reset_user_id)  # Fetch user by user_id
+        user = get_object_or_404(User, pk=reset_user_id)
         if request.method == 'POST':
             code = request.POST.get('code', '')
             totp = pyotp.TOTP(user.totp_secret)

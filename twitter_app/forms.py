@@ -4,7 +4,7 @@ from django.core.validators import RegexValidator
 from django.forms import ValidationError
 
 from twitter_app.models import Message, User
-from twitter_app.utils import IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES, MIN_POST_LENGTH
+from twitter_app.utils import IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES
 
 
 class MessageForm(forms.ModelForm):
@@ -17,12 +17,6 @@ class MessageForm(forms.ModelForm):
     class Meta:
         model = Message
         fields = ['content', 'image']
-
-    def clean_content(self):
-        content = self.cleaned_data.get('content')
-        if len(content) < MIN_POST_LENGTH:
-            raise forms.ValidationError("Message is too short!")
-        return content
 
     def clean_image(self):
         image = self.cleaned_data.get('image')
@@ -60,9 +54,9 @@ class RegisterForm(forms.ModelForm):
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(max_length=150, label='Username')
+    username = forms.CharField(max_length=20, label='Username')
     password = forms.CharField(widget=forms.PasswordInput, label='Password')
-    captcha = CaptchaField(required=False)  # CAPTCHA field, initially optional
+    captcha = CaptchaField(required=False)
 
 
 class AvatarForm(forms.ModelForm):
