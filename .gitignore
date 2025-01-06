@@ -7,3 +7,4 @@
 */__pycache__/
 karabin.*
 .env
+/app/static/admin/
