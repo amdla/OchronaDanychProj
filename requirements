@@ -3,3 +3,6 @@ bleach
 markdown
 django-simple-captcha
 argon2-cffi
+pyotp
+qrcode
+pillow
