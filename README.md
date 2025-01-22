@@ -37,29 +37,24 @@ two-factor authentication (2FA).
 
    ```env
    SECRET_KEY=your_secret_key
+   TOTP_ENCRYPTION_KEY=your_totp_encryption_key
    ```
 
 3. **Build and Run the Docker Containers**
 
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
 
 4. **Apply Database Migrations**
 
    ```bash
-   docker-compose exec web python manage.py migrate
+   docker compose exec web python manage.py migrate
    ```
 
-5. **Create a Superuser**
+5. **Access the Application**
 
-   ```bash
-   docker-compose exec web python manage.py createsuperuser
-   ```
-
-6. **Access the Application**
-
-   Open your browser and navigate to `localhost`.
+   Open your browser and navigate to `https://localhost/`.
 
 ## Usage
 

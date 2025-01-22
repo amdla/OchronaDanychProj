@@ -2,6 +2,8 @@ import pyotp
 from django.db import models
 from django.utils import timezone
 
+from twitter_app.utils import encrypt_totp_secret
+
 
 class User(models.Model):
     username = models.CharField(max_length=20, unique=True)
@@ -17,7 +19,8 @@ class User(models.Model):
 
     def generate_totp_secret(self):
         if not self.totp_secret:
-            self.totp_secret = pyotp.random_base32()
+            plain_secret = pyotp.random_base32()
+            self.totp_secret = encrypt_totp_secret(plain_secret)
             self.save()
 
 

@@ -10,6 +10,7 @@ environ.Env.read_env()
 
 # Security settings
 SECRET_KEY = env('SECRET_KEY')
+TOTP_ENCRYPTION_KEY = env('TOTP_ENCRYPTION_KEY')
 DEBUG = False
 ALLOWED_HOSTS = ['*']
 MEDIA_URL = '/media/'

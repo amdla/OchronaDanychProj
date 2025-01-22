@@ -1,5 +1,7 @@
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from cryptography.fernet import Fernet
+from django.conf import settings
 
 COOKIE_MAX_AGE = 60 * 60 * 24
 TWO_FA_COOKIE_MAX_AGE = 60
@@ -20,6 +22,16 @@ def check_password(password, hashed_password):
         return ph.verify(hashed_password, password)
     except VerifyMismatchError:
         return False
+
+
+def encrypt_totp_secret(plaintext):
+    fernet = Fernet(settings.TOTP_ENCRYPTION_KEY)
+    return fernet.encrypt(plaintext.encode()).decode()
+
+
+def decrypt_totp_secret(ciphertext):
+    fernet = Fernet(settings.TOTP_ENCRYPTION_KEY)
+    return fernet.decrypt(ciphertext.encode()).decode()
 
 
 ALLOWED_TAGS = [

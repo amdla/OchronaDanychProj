@@ -28,10 +28,11 @@ from twitter_app.models import (
 from twitter_app.utils import (
     check_password,
     hash_password,
+    decrypt_totp_secret,
     COOKIE_MAX_AGE,
     TWO_FA_COOKIE_MAX_AGE,
     ALLOWED_TAGS,
-    ALLOWED_ATTRIBUTES
+    ALLOWED_ATTRIBUTES, encrypt_totp_secret
 )
 
 
@@ -271,10 +272,14 @@ def setup_2fa(request):
 
     # If user.totp_secret is missing, generate it
     if not user.totp_secret:
-        user.totp_secret = pyotp.random_base32()
+        plain_secret = pyotp.random_base32()
+        user.totp_secret = encrypt_totp_secret(plain_secret)
         user.save()
+        current_secret = plain_secret
+    else:
+        current_secret = decrypt_totp_secret(user.totp_secret)
 
-    totp = pyotp.TOTP(user.totp_secret)
+    totp = pyotp.TOTP(current_secret)
 
     # Create provisioning URL
     otp_auth_url = totp.provisioning_uri(
@@ -375,7 +380,10 @@ def verify_2fa(request):
         user = get_object_or_404(User, pk=reset_user_id)
         if request.method == 'POST':
             code = request.POST.get('code', '')
-            totp = pyotp.TOTP(user.totp_secret)
+
+            plain_secret = decrypt_totp_secret(user.totp_secret)
+            totp = pyotp.TOTP(plain_secret)
+
             if totp.verify(code):
                 # 2FA verification successful
                 response = redirect('reset_password')
@@ -399,7 +407,9 @@ def verify_2fa(request):
 
     if request.method == 'POST':
         code = request.POST.get('code', '')
-        totp = pyotp.TOTP(user.totp_secret)
+        plain_secret = decrypt_totp_secret(user.totp_secret)
+        totp = pyotp.TOTP(plain_secret)
+
         if totp.verify(code):
             # Code is valid -> finalize login
             response = redirect('home')
