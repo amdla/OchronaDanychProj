@@ -9,3 +9,4 @@ karabin.*
 twitter_app/.env
 /app/static/admin/
 temp.py
+*.pem

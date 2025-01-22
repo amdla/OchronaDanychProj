@@ -97,13 +97,6 @@ two-factor authentication (2FA).
 - `models.py`: Database models for users, messages, and devices.
 - `wsgi.py`: WSGI application entry point.
 
-### Security Features
-
-- **Argon2 Password Hashing**: Secure password storage.
-- **CSRF Protection**: Prevents Cross-site request forgery attacks.
-- **Input Sanitization**: Prevents XSS attacks via the `bleach` library.
-- **Two-Factor Authentication**: TOTP-based 2FA for enhanced account security.
-
 ### Development Notes
 
 - The project uses the `captcha` app for added security during login and registration.
