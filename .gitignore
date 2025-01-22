@@ -1,11 +1,10 @@
-# Ignore Django migration files
 */migrations/*.py
 !*/migrations/__init__.py
-*/migrations/__pycache__/
-../library_project/.idea/
-.idea
+
 */__pycache__/
-karabin.*
+
+.idea
+
 twitter_app/.env
 /app/static/admin/
 temp.py

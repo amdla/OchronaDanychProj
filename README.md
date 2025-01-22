@@ -19,8 +19,14 @@ two-factor authentication (2FA).
 
 ### Prerequisites
 
+If you're lazy, just run `pip install -r requirements.txt` and get everything installed.
+
+However, if you want to install just the necessary packages, here's a list of them:
+
 - Docker
-- Docker Compose
+- Python 3
+- django
+- django-environ
 
 ### Setup
 
@@ -31,9 +37,9 @@ two-factor authentication (2FA).
    cd OchronaDanychProj
    ```
 
-2. **Create the `.env` file**
+2. **Modify the `.env` file**
 
-   Create a `.env` file in the root directory and add the following variables:
+   Within a `.env` file in the twitter_app directory fill the following variables with your keys:
 
    ```env
    SECRET_KEY=your_secret_key
@@ -55,6 +61,15 @@ two-factor authentication (2FA).
 5. **Access the Application**
 
    Open your browser and navigate to `https://localhost/`.
+
+
+6. **In case you get some migration related errors, use:**
+
+      ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+   
 
 ## Usage
 
