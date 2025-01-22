@@ -19,14 +19,7 @@ two-factor authentication (2FA).
 
 ### Prerequisites
 
-If you're lazy, just run `pip install -r requirements.txt` and get everything installed.
-
-However, if you want to install just the necessary packages, here's a list of them:
-
-- Docker
-- Python 3
-- django
-- django-environ
+Just run `pip install -r requirements.txt` and get everything installed. You also need Docker installed on your machine.
 
 ### Setup
 
@@ -45,31 +38,28 @@ However, if you want to install just the necessary packages, here's a list of th
    SECRET_KEY=your_secret_key
    TOTP_ENCRYPTION_KEY=your_totp_encryption_key
    ```
-
-3. **Build and Run the Docker Containers**
-
-   ```bash
-   docker compose up --build
-   ```
-
-4. **Apply Database Migrations**
-
-   ```bash
-   docker compose exec web python manage.py migrate
-   ```
-
-5. **Access the Application**
-
-   Open your browser and navigate to `https://localhost/`.
-
-
-6. **In case you get some migration related errors, use:**
+3. **In case you get some migration related errors, use:**
 
       ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
-   
+
+4. **Build and Run the Docker Containers**
+
+   ```bash
+   docker compose up --build
+   ```
+
+5. **Apply Database Migrations**
+
+   ```bash
+   docker compose exec web python manage.py migrate
+   ```
+
+6. **Access the Application**
+
+   Open your browser and navigate to `https://localhost/`.
 
 ## Usage
 
