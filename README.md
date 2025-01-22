@@ -38,26 +38,33 @@ Just run `pip install -r requirements.txt` and get everything installed. You als
    SECRET_KEY=your_secret_key
    TOTP_ENCRYPTION_KEY=your_totp_encryption_key
    ```
-3. **In case you get some migration related errors, use:**
+   
+3. **Prevent from accidentally pushing your `.env` file to the repository**
+
+   ```bash
+   git update-index --assume-unchanged twitter_app/.env
+   ```
+   
+4. **In case you get some migration related errors, use:**
 
       ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-4. **Build and Run the Docker Containers**
+5. **Build and Run the Docker Containers**
 
    ```bash
    docker compose up --build
    ```
 
-5. **Apply Database Migrations**
+6. **Apply Database Migrations**
 
    ```bash
    docker compose exec web python manage.py migrate
    ```
 
-6. **Access the Application**
+7. **Access the Application**
 
    Open your browser and navigate to `https://localhost/`.
 
