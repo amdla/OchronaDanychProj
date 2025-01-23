@@ -32,7 +32,7 @@ Just run `pip install -r requirements.txt` and get everything installed. You als
 
 2. **Modify the `.env` file**
 
-   Within a `.env` file in the twitter_app directory fill the following variables with your keys:
+   Fill the following variables with actual keys in your twitter_app/.env file:
 
    ```env
    SECRET_KEY=your_secret_key
@@ -44,27 +44,14 @@ Just run `pip install -r requirements.txt` and get everything installed. You als
    ```bash
    git update-index --assume-unchanged twitter_app/.env
    ```
-   
-4. **In case you get some migration related errors, use:**
 
-      ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-5. **Build and Run the Docker Containers**
+4. **Build and Run the Docker Containers**
 
    ```bash
    docker compose up --build
    ```
 
-6. **Apply Database Migrations**
-
-   ```bash
-   docker compose exec web python manage.py migrate
-   ```
-
-7. **Access the Application**
+5. **Access the Application**
 
    Open your browser and navigate to `https://localhost/`.
 

@@ -5,7 +5,7 @@ from django.conf import settings
 
 COOKIE_MAX_AGE = 60 * 60 * 24
 TWO_FA_COOKIE_MAX_AGE = 60
-IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES = 15 * 1024 * 1024
+IMAGE_MAX_SIZE_THRESHOLD_IN_BYTES = 5 * 1024 * 1024
 
 # Initialize the Argon2 password hasher
 ph = PasswordHasher()
