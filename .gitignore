@@ -8,3 +8,4 @@ twitter_app/.env
 /app/static/admin/
 temp.py
 *.pem
+# ^ THIS ONE TAKES CARE OF CERTS DIR ALREADY

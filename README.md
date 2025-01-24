@@ -57,13 +57,7 @@ two-factor authentication (2FA).
    ```bash
    docker compose up --build
    ```
-
-6. **TEMPORTARY STEP**
-
-   #### AS FOR NOW, THERE IS AN ISSUE WITH GENERATING CERTIFICATES DURING VERY FIRST LAUNCH CAUSING THE APP TO CRASH. TO FIX IT, YOU NEED TO STOP THE CONTAINER AND REPEAT STEP 5 ONCE AGAIN.
-   #### This issue doesn't affect future launches.
-
-7. **Access the Application**
+6. **Access the Application**
 
    Open your browser and navigate to `https://localhost/`.
 
