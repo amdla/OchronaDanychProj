@@ -19,7 +19,11 @@ two-factor authentication (2FA).
 
 ### Prerequisites
 
-Just run `pip install -r requirements.txt` and get everything installed. You also need Docker installed on your machine.
+#### To run the application, you need the following software installed on your system:
+
+1. Docker
+2. Python3
+3. pip
 
 ### Setup
 
@@ -27,31 +31,39 @@ Just run `pip install -r requirements.txt` and get everything installed. You als
 
    ```bash
    git clone https://github.com/amdla/OchronaDanychProj
-   cd OchronaDanychProj
    ```
 
-2. **Modify the `.env` file**
-
-   Fill the following variables with actual keys in your twitter_app/.env file:
+2. **Modify the `.env` file in `twitter_app` directory with your keys**
 
    ```env
    SECRET_KEY=your_secret_key
    TOTP_ENCRYPTION_KEY=your_totp_encryption_key
    ```
-   
+   #### Bear in mind that both keys will allow you to use the data created just with these keys. If you lose them, you will lose access to the data. The same way - you can't access the data created with different keys.
+
 3. **Prevent from accidentally pushing your `.env` file to the repository**
 
    ```bash
    git update-index --assume-unchanged twitter_app/.env
    ```
+4. **Install the Required Python Packages**
 
-4. **Build and Run the Docker Containers**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Build and Run the Docker Containers**
 
    ```bash
    docker compose up --build
    ```
 
-5. **Access the Application**
+6. **TEMPORTARY STEP**
+
+   #### AS FOR NOW, THERE IS AN ISSUE WITH GENERATING CERTIFICATES DURING VERY FIRST LAUNCH CAUSING THE APP TO CRASH. TO FIX IT, YOU NEED TO STOP THE CONTAINER AND REPEAT STEP 5 ONCE AGAIN.
+   #### This issue doesn't affect future launches.
+
+7. **Access the Application**
 
    Open your browser and navigate to `https://localhost/`.
 
@@ -95,8 +107,3 @@ Just run `pip install -r requirements.txt` and get everything installed. You als
 - `forms.py`: Form definitions for user input validation.
 - `models.py`: Database models for users, messages, and devices.
 - `wsgi.py`: WSGI application entry point.
-
-### Development Notes
-
-- The project uses the `captcha` app for added security during login and registration.
-- Image uploads are restricted to specific formats and size limits (15 MB).
