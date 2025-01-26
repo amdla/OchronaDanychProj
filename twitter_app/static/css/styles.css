@@ -48,6 +48,11 @@ body {
     margin: 0 auto; /* Center the content horizontally */
 }
 
+.btn.btn-primary,
+form button[type="submit"].btn-primary {
+    border-radius: 20px !important; /* Force rounded corners */
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
@@ -251,6 +256,13 @@ form button[type="submit"]:hover {
     border: 2px solid #007bff;
 }
 
+.message-time {
+    display: block;
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
 /* ==================== DARK MODE OVERRIDES ==================== */
 
 body.dark-mode {
@@ -360,4 +372,17 @@ body.dark-mode a {
 
 body.dark-mode a:hover {
     color: #3399ff;
+}
+
+body.dark-mode .message-time {
+    color: #b0b3b8;
+}
+
+/* Remove form styling for inline forms */
+form.d-inline {
+    display: inline !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }

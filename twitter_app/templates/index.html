@@ -15,7 +15,7 @@
                 <textarea name="content" id="content-input" placeholder="What's on your mind?" required></textarea>
 
                 <!-- Image Upload and Submit Button -->
-                <div class="additional-fields" id="additional-fields" >
+                <div class="additional-fields" id="additional-fields">
                     {{ form.image.label_tag }}
                     {{ form.image }}
                     <button type="submit">Post Message</button>
@@ -36,6 +36,7 @@
                     </a>
                     <h3>{{ message.user.username }} says:</h3>
                     <div class="content">
+                        <small class="message-time">{{ message.created_at|date:"F j, Y, g:i a" }}</small>
                         {{ message.content|safe }}
                     </div>
                     {% if message.image_url %}
@@ -44,7 +45,6 @@
                     {% if message.image %}
                         <img src="{{ message.image.url }}" alt="Uploaded Image" class="posted-image">
                     {% endif %}
-
                     <!-- Delete Button Displayed Only for Message Owner -->
                     {% if message.user.username == username %}
                         <form action="{% url 'delete_message' message.id %}" method="POST" class="delete-form">
