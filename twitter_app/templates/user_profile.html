@@ -66,6 +66,11 @@
                             </button>
                         </form>
                     {% endif %}
+                    {% if message.signed %}
+                        <span style="color:green;">✅ Signed</span>
+                    {% else %}
+                        <span style="color:red;">❌ Not Signed</span>
+                    {% endif %}
                 </div>
             </div>
         {% empty %}

@@ -13,10 +13,18 @@ class MessageForm(forms.ModelForm):
         widget=forms.ClearableFileInput(attrs={'class': 'image-input'}),
         label="Upload Image"
     )
+    private_key = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Enter your private key (optional)',
+            'class': 'form-control'
+        }),
+        required=False,
+        label="Private Key"
+    )
 
     class Meta:
         model = Message
-        fields = ['content', 'image']
+        fields = ['content', 'image', 'private_key']
 
     def clean_image(self):
         image = self.cleaned_data.get('image')

@@ -1,8 +1,10 @@
+import secrets
+
 import pyotp
 from django.db import models
 from django.utils import timezone
 
-from twitter_app.utils import encrypt_totp_secret
+from twitter_app.utils import encrypt_totp_secret, hash_password, check_password
 
 
 class User(models.Model):
@@ -13,6 +15,16 @@ class User(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     totp_secret = models.CharField(max_length=100, blank=True, null=True)
     two_factor_enabled = models.BooleanField(default=True)
+    private_key_hashed = models.CharField(max_length=255, blank=True, null=True)
+
+    def generate_private_key(self):
+        raw_private_key = secrets.token_hex(32)
+        self.private_key_hashed = hash_password(raw_private_key)
+        self.save()
+        return raw_private_key
+
+    def verify_private_key(self, private_key):
+        return check_password(private_key, self.private_key_hashed)
 
     def __str__(self):
         return self.username
@@ -31,9 +43,14 @@ class Message(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.IntegerField(default=1)
+    signed = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
+
+    def mark_as_signed(self):
+        self.signed = True
+        self.save()
 
 
 class Device(models.Model):

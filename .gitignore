@@ -6,6 +6,7 @@
 
 twitter_app/.env
 /app/static/admin/
+twitter_app/migrations/
 temp.py
 *.pem
 # ^ THIS ONE TAKES CARE OF CERTS DIR ALREADY

@@ -11,16 +11,27 @@
         <div class="expandable-form">
             <form method="POST" enctype="multipart/form-data" id="message-form">
                 {% csrf_token %}
+
+                <!-- Message Content -->
                 <label for="content-input">Your Message:</label>
                 <textarea name="content" id="content-input" placeholder="What's on your mind?" required></textarea>
 
-                <!-- Image Upload and Submit Button -->
-                <div class="additional-fields" id="additional-fields">
-                    {{ form.image.label_tag }}
+                <!-- Expandable Section -->
+                <div class="additional-fields" id="additional-fields" style="display: none;">
+                    <!-- Private Key Input -->
+                    <label for="private-key-input">Private Key:</label>
+                    <textarea name="private_key" id="private-key-input"
+                              placeholder="Enter your private key (optional)"></textarea>
+
+                    <!-- Image Upload -->
+                    <label for="image-upload">Upload Image:</label>
                     {{ form.image }}
+
+                    <!-- Submit Button -->
                     <button type="submit">Post Message</button>
                 </div>
             </form>
+
         </div>
     {% else %}
         <p>You are not logged in. <a href="{% url 'login' %}">Login here</a>.</p>
@@ -53,6 +64,11 @@
                                 🗑️
                             </button>
                         </form>
+                    {% endif %}
+                    {% if message.signed %}
+                        <span style="color:green;">✅ Signed</span>
+                    {% else %}
+                        <span style="color:red;">❌ Not Signed</span>
                     {% endif %}
                 </div>
             {% endif %}

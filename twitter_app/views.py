@@ -43,7 +43,6 @@ def index(request):
     if not username or not device_cookie:
         return redirect('login')
 
-    # Validate the user & device
     try:
         user = User.objects.get(username=username)
         if not user.devices.filter(cookie_value=device_cookie).exists():
@@ -56,21 +55,20 @@ def index(request):
         if form.is_valid():
             new_message = form.save(commit=False)
             new_message.user = user
+
+            private_key = form.cleaned_data['private_key']
+            if private_key and user.verify_private_key(private_key):
+                new_message.mark_as_signed()
+                messages.success(request, "✅ Message signed and posted successfully!")
+            else:
+                messages.warning(request, "⚠ Message posted without signing.")
+
             new_message.save()
-            messages.success(request, "Message posted successfully!")
             return redirect('home')
     else:
         form = MessageForm()
 
     messages_list = Message.objects.filter(status=1).order_by('-created_at')
-    for message in messages_list:
-        html_content = markdown.markdown(message.content)
-        sanitized_content = bleach.clean(
-            html_content,
-            tags=ALLOWED_TAGS,
-            attributes=ALLOWED_ATTRIBUTES
-        )
-        message.content = sanitized_content
 
     return render(request, 'index.html', {
         'messages': messages_list,
@@ -167,8 +165,11 @@ def register(request):
         if form.is_valid():
             new_user = form.save(commit=False)
             new_user.password = hash_password(form.cleaned_data["password"])
+            raw_private_key = new_user.generate_private_key()
             new_user.save()
-            messages.success(request, "Registration successful! Please log in and set up two-factor authentication.")
+
+            messages.success(request,
+                             f"Registration successful! Your private key: {raw_private_key}. Save it securely.")
             return redirect('login')
     else:
         form = RegisterForm()
