@@ -13,6 +13,7 @@ from django.shortcuts import (
     get_object_or_404
 )
 from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_protect
 
 from twitter_app.forms import (
     LoginForm,
@@ -36,6 +37,7 @@ from twitter_app.utils import (
 )
 
 
+@csrf_protect
 def index(request):
     username = request.COOKIES.get('username')
     device_cookie = request.COOKIES.get('device_cookie')
@@ -86,6 +88,7 @@ def index(request):
     })
 
 
+@csrf_protect
 def login_view(request):
     form = LoginForm(request.POST or None)
 
@@ -111,7 +114,8 @@ def login_view(request):
 
                     # Store the user ID in a special cookie for setup only
                     response = redirect('setup_2fa')
-                    response.set_cookie('setup_2fa_user_id', str(user.id), max_age=300)
+                    response.set_cookie('setup_2fa_user_id', str(user.id), max_age=300,
+                                        secure=True, httponly=True, samesite='Strict')
                     return response
 
                 # Otherwise, TFE=True AND totp_secret is set => do normal 2FA verify
@@ -133,9 +137,12 @@ def login_view(request):
 
                 # Temporarily store user info in cookies for TOTP verify
                 response = redirect('verify_2fa')
-                response.set_cookie('2fa_user_id', str(user.id), max_age=300)  # for verify_2fa
-                response.set_cookie('pending_cookie_value', cookie_value, max_age=300)
-                response.set_cookie('pending_device_name', device_name, max_age=300)
+                response.set_cookie('2fa_user_id', str(user.id), max_age=300,
+                                    secure=True, httponly=True, samesite='Strict')  # for verify_2fa
+                response.set_cookie('pending_cookie_value', cookie_value, max_age=300,
+                                    secure=True, httponly=True, samesite='Strict')
+                response.set_cookie('pending_device_name', device_name, max_age=300,
+                                    secure=True, httponly=True, samesite='Strict')
                 return response
 
             else:
@@ -157,8 +164,10 @@ def login_view(request):
                     )
 
                 response = redirect('home')
-                response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
-                response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE)
+                response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE,
+                                    secure=True, httponly=True, samesite='Strict')
+                response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE,
+                                    secure=True, httponly=True, samesite='Strict')
                 messages.success(request, "Logged in successfully!")
                 return response
 
@@ -168,8 +177,9 @@ def login_view(request):
     return render(request, 'login.html', {'form': form})
 
 
+@csrf_protect
 def register(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             new_user = form.save(commit=False)
@@ -186,6 +196,7 @@ def register(request):
     return render(request, 'register.html', {'form': form})
 
 
+@csrf_protect
 def logout_view(request):
     response = redirect('login')
     response.delete_cookie('username')
@@ -200,6 +211,7 @@ def logout_view(request):
     return response
 
 
+@csrf_protect
 def user_profile(request, username):
     cookie_username = request.COOKIES.get('username')  # The logged-in user's username
 
@@ -248,6 +260,7 @@ def list_user_devices(request):
     return render(request, 'device.html', {'devices': devices, 'username': username})
 
 
+@csrf_protect
 def delete_device_cookie(request, device_id):
     username = request.COOKIES.get('username')
     device_cookie = request.COOKIES.get('device_cookie')
@@ -272,6 +285,7 @@ def delete_device_cookie(request, device_id):
     return response
 
 
+@csrf_protect
 def setup_2fa(request):
     user_id = request.COOKIES.get('setup_2fa_user_id')
     if not user_id:
@@ -328,6 +342,7 @@ def setup_2fa(request):
     })
 
 
+@csrf_protect
 def delete_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
     message.status = 0  # Soft delete by setting status to 0
@@ -336,6 +351,7 @@ def delete_message(request, message_id):
     return redirect('home')
 
 
+@csrf_protect
 def reset_password(request):
     user_id = request.COOKIES.get('reset_user_id')
     user = get_object_or_404(User, pk=user_id)
@@ -355,6 +371,7 @@ def reset_password(request):
     return render(request, 'reset_password.html', {'form': form})
 
 
+@csrf_protect
 def toggle_2fa(request):
     if request.method == 'POST':
         cookie_username = request.COOKIES.get('username')
@@ -365,14 +382,17 @@ def toggle_2fa(request):
         return redirect('user_profile', username=cookie_username)
 
 
+@csrf_protect
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         try:
             user = User.objects.get(email=email)  # Fetch user by email
             response = redirect('verify_2fa')
-            response.set_cookie('reset_user_id', str(user.id), max_age=TWO_FA_COOKIE_MAX_AGE)  # Store user_id in cookie
-            response.set_cookie('reset_purpose', 'password_reset', max_age=TWO_FA_COOKIE_MAX_AGE)
+            response.set_cookie('reset_user_id', str(user.id), max_age=TWO_FA_COOKIE_MAX_AGE,
+                                secure=True, httponly=True, samesite='Strict')  # Store user_id in cookie
+            response.set_cookie('reset_purpose', 'password_reset', max_age=TWO_FA_COOKIE_MAX_AGE,
+                                secure=True, httponly=True, samesite='Strict')
             messages.info(request, "Please verify your 2FA code for password reset.")
             return response
         except User.DoesNotExist:
@@ -380,6 +400,7 @@ def forgot_password(request):
     return render(request, 'forgot_password.html')
 
 
+@csrf_protect
 def verify_2fa(request):
     user_id = request.COOKIES.get('2fa_user_id')  # For login flow
     reset_user_id = request.COOKIES.get('reset_user_id')  # For password reset flow
@@ -397,7 +418,8 @@ def verify_2fa(request):
             if totp.verify(code):
                 # 2FA verification successful
                 response = redirect('reset_password')
-                response.set_cookie('reset_user_id', str(user.id), max_age=COOKIE_MAX_AGE)
+                response.set_cookie('reset_user_id', str(user.id), max_age=COOKIE_MAX_AGE,
+                                    secure=True, httponly=True, samesite='Strict')
                 response.delete_cookie('reset_purpose')
                 messages.success(request, "2FA verification successful! Please set a new password.")
                 return response
@@ -424,8 +446,10 @@ def verify_2fa(request):
             # Code is valid -> finalize login
             response = redirect('home')
             # Set real login cookies
-            response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE)
-            response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE)
+            response.set_cookie('username', user.username, max_age=COOKIE_MAX_AGE,
+                                secure=True, httponly=True, samesite='Strict')
+            response.set_cookie('device_cookie', cookie_value, max_age=COOKIE_MAX_AGE,
+                                secure=True, httponly=True, samesite='Strict')
             # Remove temp cookies
             response.delete_cookie('2fa_user_id')
             response.delete_cookie('pending_cookie_value')

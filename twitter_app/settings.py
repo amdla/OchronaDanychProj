@@ -12,7 +12,7 @@ environ.Env.read_env()
 SECRET_KEY = env('SECRET_KEY')
 TOTP_ENCRYPTION_KEY = env('TOTP_ENCRYPTION_KEY')
 DEBUG = False
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -37,7 +37,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
 ]
 
 # Root URL configuration
@@ -95,3 +94,6 @@ SECURE_HIDE_SERVER_HEADERS = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://localhost']
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
