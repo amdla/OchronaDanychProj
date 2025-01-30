@@ -70,6 +70,15 @@ def index(request):
 
     messages_list = Message.objects.filter(status=1).order_by('-created_at')
 
+    for message in messages_list:
+        html_content = markdown.markdown(message.content)
+        sanitized_content = bleach.clean(
+            html_content,
+            tags=ALLOWED_TAGS,
+            attributes=ALLOWED_ATTRIBUTES
+        )
+        message.content = sanitized_content
+
     return render(request, 'index.html', {
         'messages': messages_list,
         'username': username,
